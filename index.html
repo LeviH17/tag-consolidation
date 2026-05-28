@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unified Smart Tags — V1 Prototype (Pendulum)</title>
+<style>
+  :root{
+    --bg:#ffffff; --panel:#ffffff; --line:#e6e7eb; --line-soft:#f0f1f4;
+    --ink:#15161a; --ink-2:#6b7280; --ink-3:#9aa1ad;
+    --accent:#6d28d9; --accent-soft:#ede9fe;
+    --dark:#16131f;
+    --risk-bg:#fde7ec; --risk-ink:#c0264a;
+    --exp-bg:#ede9fe; --exp-ink:#6d28d9;
+    --sf-vet:#2563eb; --sf-mon:#0d9488; --sf-alert:#d97706;
+    --shadow:0 1px 2px rgba(16,18,25,.04),0 6px 24px rgba(16,18,25,.06);
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink); background:#f5f6f8; font-size:14px; line-height:1.4;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; height:100vh; overflow:hidden}
+
+  /* ---------- Left nav ---------- */
+  .nav{width:228px; flex:0 0 228px; background:#fff; border-right:1px solid var(--line);
+       display:flex; flex-direction:column; padding:14px 12px}
+  .brand{display:flex; align-items:center; gap:9px; padding:6px 8px 14px; font-weight:700; font-size:16px}
+  .brand .dot{width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #fff 0 22%, #16131f 24% 100%); box-shadow:0 0 0 1px #16131f inset}
+  .brand .collapse{margin-left:auto; color:var(--ink-3)}
+  .nav-list{display:flex;flex-direction:column;gap:1px; overflow:auto; flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:9px;color:#3a3d45;
+    cursor:pointer; font-weight:500}
+  .nav-item:hover{background:#f4f4f7}
+  .nav-item.active{background:#f1eefe;color:var(--accent)}
+  .nav-item .chev{margin-left:auto;color:var(--ink-3)}
+  .nav-item svg{flex:0 0 18px}
+  .nav-sep{height:1px;background:var(--line-soft);margin:8px 4px}
+  .nav-foot{display:flex;flex-direction:column;gap:1px;padding-top:6px}
+  .nav-user{display:flex;align-items:center;gap:9px;padding:8px;margin-top:6px;border-top:1px solid var(--line-soft)}
+  .avatar{width:28px;height:28px;border-radius:8px;background:#16131f;color:#fff;display:grid;place-items:center;
+    font-size:11px;font-weight:700;flex:0 0 28px}
+  .nav-user .meta{line-height:1.15;overflow:hidden}
+  .nav-user .meta b{font-size:13px}
+  .nav-user .meta span{font-size:11px;color:var(--ink-3);display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;background:#fff}
+  .topbar{height:56px;flex:0 0 56px;border-bottom:1px solid var(--line);display:flex;align-items:center;
+    padding:0 24px;gap:14px}
+  .topbar h1{font-size:17px;margin:0;font-weight:650}
+  .topbar .pill{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);
+    padding:3px 9px;border-radius:999px}
+  .topbar .spacer{flex:1}
+  .topbar .av-photo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#9bb6d8,#6d8bb0)}
+
+  .content{flex:1;overflow:auto;padding:18px 24px 40px}
+  .tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .tab{padding:0 1px 12px;color:var(--ink-2);font-weight:550;cursor:pointer;border-bottom:2px solid transparent;
+    margin-bottom:-1px}
+  .tab.active{color:var(--ink);border-color:var(--ink)}
+
+  /* toolbar */
+  .toolbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .seg{display:inline-flex;background:#f1f2f5;border-radius:10px;padding:3px}
+  .seg button{border:0;background:transparent;padding:7px 12px;border-radius:8px;font:inherit;font-weight:550;
+    color:var(--ink-2);cursor:pointer;display:flex;align-items:center;gap:7px}
+  .seg button.active{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .search{position:relative;flex:1;min-width:200px;max-width:340px}
+  .search input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--line);border-radius:10px;font:inherit;
+    background:#fff;outline:none}
+  .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+  .btn{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:10px;font:inherit;font-weight:600;
+    cursor:pointer;display:inline-flex;align-items:center;gap:7px;color:var(--ink)}
+  .btn:hover{background:#fafafb}
+  .btn.primary{background:var(--dark);color:#fff;border-color:var(--dark)}
+  .btn.primary:hover{background:#000}
+  .btn.ghost{border-color:transparent;color:var(--accent);background:transparent}
+  .btn.ghost:hover{background:var(--accent-soft)}
+
+  /* filter chips */
+  .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .flabel{font-size:12px;color:var(--ink-3);font-weight:600;margin-right:2px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:12.5px;
+    font-weight:550;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:#42454d;user-select:none}
+  .chip:hover{border-color:#cfd2d9}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip .dot{width:7px;height:7px;border-radius:50%}
+  .chip.on .dot{box-shadow:0 0 0 1px #fff}
+  .vsep{width:1px;height:18px;background:var(--line);margin:0 4px}
+
+  /* badges */
+  .badge{font-size:11.5px;font-weight:650;padding:3px 9px;border-radius:999px;display:inline-block}
+  .badge.risk{background:var(--risk-bg);color:var(--risk-ink)}
+  .badge.exp{background:var(--exp-bg);color:var(--exp-ink)}
+  .lbls{display:inline-flex;gap:5px;flex-wrap:wrap}
+  .lbl{font-size:11px;font-weight:550;background:#f2f3f5;color:#5b606b;border-radius:6px;padding:2px 7px}
+  .surf{display:inline-flex;gap:5px;align-items:center}
+  .sd{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:800;
+    background:#f1f2f5;color:#b6bac2;letter-spacing:.2px}
+  .sd.on{color:#fff}
+  .sd.v.on{background:var(--sf-vet)} .sd.m.on{background:var(--sf-mon)} .sd.a.on{background:var(--sf-alert)}
+  .folder-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#5b606b}
+  .folder-pill .fd{width:8px;height:8px;border-radius:3px}
+
+  /* ---------- TREE VIEW ---------- */
+  .split{display:flex;gap:18px;align-items:flex-start}
+  .tree{flex:0 0 222px;border:1px solid var(--line);border-radius:var(--radius);padding:8px;background:#fff}
+  .tree h4{margin:6px 8px 8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+  .tnode{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;color:#3a3d45;
+    font-weight:520}
+  .tnode:hover{background:#f5f5f8}
+  .tnode.active{background:var(--accent-soft);color:var(--accent);font-weight:650}
+  .tnode .fd{width:9px;height:9px;border-radius:3px;flex:0 0 9px}
+  .tnode .cnt{margin-left:auto;font-size:11px;color:var(--ink-3);background:#f1f2f5;border-radius:999px;padding:1px 7px}
+  .tnode.active .cnt{background:#fff}
+  .tnode.sub{padding-left:24px;font-size:13px;font-weight:480}
+  .tree-add{margin-top:6px;border-top:1px solid var(--line-soft);padding-top:6px}
+
+  .tablewrap{flex:1;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;min-width:0}
+  table{width:100%;border-collapse:collapse}
+  th{ text-align:left;font-size:12px;color:var(--ink-2);font-weight:600;padding:13px 16px;background:#fcfcfd;
+     border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:13px 16px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fbfafe}
+  .tname{font-weight:620;display:flex;align-items:center;gap:9px}
+  .grip{color:#cfd2d9;cursor:grab}
+  .by{display:flex;align-items:center;gap:8px}
+  .by .avatar{width:24px;height:24px;border-radius:7px;font-size:10px}
+  .acts{display:flex;gap:6px;justify-content:flex-end}
+  .iconbtn{width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:transparent;display:grid;
+    place-items:center;color:var(--ink-3);cursor:pointer}
+  .iconbtn:hover{background:#f1f2f5;color:var(--ink)}
+  .iconbtn.danger:hover{background:#fde7ec;color:var(--risk-ink)}
+
+  /* ---------- SECTIONS VIEW ---------- */
+  .sections{display:flex;flex-direction:column;gap:14px}
+  .sec{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff}
+  .sec-head{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;background:#fcfcfd}
+  .sec-head .fd{width:10px;height:10px;border-radius:3px}
+  .sec-head .caret{transition:transform .15s;color:var(--ink-3)}
+  .sec.collapsed .caret{transform:rotate(-90deg)}
+  .sec.collapsed .sec-body{display:none}
+  .sec-head b{font-size:14px}
+  .sec-head .cnt{margin-left:auto;font-size:12px;color:var(--ink-3)}
+  .sec-body{padding:6px 6px 8px}
+  .srow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px}
+  .srow:hover{background:#fafafb}
+  .srow .tname{flex:1;min-width:160px}
+
+  /* ---------- KANBAN VIEW ---------- */
+  .board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:8px}
+  .col{flex:0 0 268px;background:#f6f7f9;border:1px solid var(--line);border-radius:var(--radius);padding:10px;
+    display:flex;flex-direction:column;gap:9px;min-height:120px}
+  .col.drop{outline:2px dashed var(--accent);outline-offset:-3px;background:#f3f0fd}
+  .col-head{display:flex;align-items:center;gap:8px;padding:2px 4px 4px}
+  .col-head .fd{width:10px;height:10px;border-radius:3px}
+  .col-head b{font-size:13px}
+  .col-head .cnt{margin-left:auto;font-size:11px;color:var(--ink-3);background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:1px 7px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;cursor:grab;box-shadow:var(--shadow)}
+  .card:active{cursor:grabbing}
+  .card.dragging{opacity:.4}
+  .card .ct{font-weight:620;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+  .card .crow{display:flex;align-items:center;justify-content:space-between;margin-top:9px}
+  .col-add{border:1px dashed #cfd2d9;background:transparent;border-radius:10px;padding:9px;color:var(--ink-3);
+    font-weight:600;cursor:pointer}
+  .col-add:hover{color:var(--accent);border-color:var(--accent)}
+
+  .hint{font-size:12.5px;color:var(--ink-2);background:#f7f6fd;border:1px solid #e9e5fb;border-radius:10px;
+    padding:9px 13px;margin-bottom:14px;display:flex;gap:8px;align-items:center}
+  .hint b{color:var(--accent)}
+
+  /* ---------- Modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(16,18,25,.42);display:none;align-items:center;justify-content:center;
+    z-index:50;padding:24px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:16px;width:min(680px,100%);max-height:86vh;overflow:hidden;display:flex;
+    flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.3)}
+  .modal-head{padding:18px 22px;border-bottom:1px solid var(--line)}
+  .modal-head h3{margin:0 0 3px;font-size:16px}
+  .modal-head p{margin:0;color:var(--ink-2);font-size:13px}
+  .modal-tabs{display:flex;gap:6px;padding:12px 22px 0}
+  .mtab{padding:9px 13px;border-radius:9px 9px 0 0;font-weight:600;color:var(--ink-2);cursor:pointer;
+    display:flex;align-items:center;gap:8px;border:1px solid transparent;border-bottom:0}
+  .mtab .sd{width:18px;height:18px}
+  .mtab.active{color:var(--ink);background:#fff;border-color:var(--line)}
+  .modal-body{padding:16px 22px;overflow:auto}
+  .ctx{background:#f8f9fb;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:6px}
+  .ctx .ctx-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;color:var(--ink-2)}
+  .ctx .ctx-top .who{font-weight:650;color:var(--ink)}
+  .pickgroup{margin-bottom:12px}
+  .pickgroup .pg-h{display:flex;align-items:center;gap:7px;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-3);font-weight:700;margin:4px 2px 7px}
+  .pickgroup .pg-h .fd{width:8px;height:8px;border-radius:3px}
+  .opt{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;
+    background:#fff;margin-bottom:7px;cursor:pointer}
+  .opt:hover{border-color:#cfd2d9}
+  .opt.sel{border-color:var(--accent);background:#faf8ff}
+  .opt .cbx{width:18px;height:18px;border-radius:6px;border:1.5px solid #cfd2d9;display:grid;place-items:center;
+    flex:0 0 18px;color:#fff}
+  .opt.sel .cbx{background:var(--accent);border-color:var(--accent)}
+  .opt .on-name{font-weight:600;flex:1}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .modal-foot .note{font-size:12.5px;color:var(--ink-2);flex:1}
+  .x{margin-left:auto;cursor:pointer;color:var(--ink-3);font-size:20px;line-height:1}
+
+  .empty{padding:48px;text-align:center;color:var(--ink-3)}
+  .count-note{font-size:12.5px;color:var(--ink-3);margin:0 0 12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- LEFT NAV -->
+  <aside class="nav">
+    <div class="brand"><span class="dot"></span> Pendulum <span class="collapse">⧉</span></div>
+    <div class="nav-list" id="navList"></div>
+    <div class="nav-user">
+      <span class="avatar">LH</span>
+      <span class="meta"><b>Levi Howard</b><span>levi+Levi_san…</span></span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h1>Smart Tags</h1>
+      <span class="pill">Unified · V1 prototype</span>
+      <span class="spacer"></span>
+      <div class="av-photo"></div>
+    </div>
+
+    <div class="content">
+      <div class="tabs">
+        <div class="tab">Alert Feed</div>
+        <div class="tab active">Smart Tags &amp; Categories</div>
+      </div>
+
+      <div class="hint">
+        <b>What's new in V1:</b>&nbsp;One library of categories shared across Influencer Vetting, Influencer Monitoring &amp; Smart Alerts — organized by <b>folder</b> (use case) and <b>label</b> (cross-cutting). Try the layout switcher, then hit <b>Preview tag picker</b> to see reuse across all three surfaces.
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="seg" id="viewSeg">
+          <button data-view="tree" class="active">▤ Folder tree</button>
+          <button data-view="sections">▦ Grouped</button>
+          <button data-view="kanban">▥ Board</button>
+        </div>
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input id="search" placeholder="Search by name" />
+        </div>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn ghost" id="pickerBtn">⤢ Preview tag picker</button>
+        <button class="btn" id="newFolderBtn">+ New folder</button>
+        <button class="btn primary" id="newTagBtn">+ New smart tag</button>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters" id="filters"></div>
+
+      <p class="count-note" id="countNote"></p>
+
+      <!-- VIEW -->
+      <div id="view"></div>
+    </div>
+  </main>
+</div>
+
+<!-- TAG PICKER MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div style="display:flex;align-items:flex-start">
+        <div>
+          <h3>Reuse saved categories across surfaces</h3>
+          <p>The exact same folders &amp; tags you manage here power category selection everywhere. Edit once, reuse everywhere.</p>
+        </div>
+        <span class="x" id="modalX">×</span>
+      </div>
+    </div>
+    <div class="modal-tabs" id="modalTabs"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <span class="note" id="modalNote"></span>
+      <button class="btn">Cancel</button>
+      <button class="btn primary" id="modalApply">Apply categories</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================== DATA ============================== */
+const SURFACES = [
+  {key:'V', cls:'v', name:'Influencer Vetting',     short:'Vetting',     color:'#2563eb'},
+  {key:'M', cls:'m', name:'Influencer Monitoring',  short:'Monitoring',  color:'#0d9488'},
+  {key:'A', cls:'a', name:'Smart Alerts',           short:'Alerts',      color:'#d97706'},
+];
+const FOLDERS = [
+  {id:'risk',      name:'Risk Management',   color:'#dc2626'},
+  {id:'marketing', name:'Brand Marketing',   color:'#7c3aed'},
+  {id:'comms',     name:'Comms / PR',        color:'#0891b2'},
+  {id:'vetting',   name:'Influencer Vetting',color:'#2563eb'},
+  {id:'uncat',     name:'Uncategorized',     color:'#9ca3af'},
+];
+let TAGS = [
+  {id:1,  name:'test tag 2',       type:'Risk', folder:'risk',      labels:['crisis','high-priority'], surf:['V','M','A'], date:'May 27, 2025'},
+  {id:2,  name:'Crisis watch',     type:'Risk', folder:'risk',      labels:['crisis'],                 surf:['A'],         date:'Mar 02, 2026'},
+  {id:3,  name:'Legal exposure',   type:'Risk', folder:'risk',      labels:['legal','high-priority'],  surf:['V','M','A'], date:'Jan 18, 2026'},
+  {id:4,  name:'Silicon shield',   type:'Exposure', folder:'marketing', labels:['geopolitics'],        surf:['M','A'],     date:'Aug 22, 2025'},
+  {id:5,  name:'Quality mentions', type:'Exposure', folder:'marketing', labels:['sentiment'],          surf:['V','M','A'], date:'Apr 07, 2026'},
+  {id:6,  name:'Launch buzz',      type:'Exposure', folder:'marketing', labels:['q2-launch'],          surf:['M','A'],     date:'May 11, 2026'},
+  {id:7,  name:'example',          type:'Exposure', folder:'comms',     labels:['demo'],               surf:['V','A'],     date:'Apr 27, 2026'},
+  {id:8,  name:'Spokesperson watch',type:'Exposure',folder:'comms',     labels:['exec'],               surf:['M','A'],     date:'Feb 14, 2026'},
+  {id:9,  name:'Brand safety check',type:'Risk', folder:'vetting',  labels:['vetting'],                surf:['V','M'],     date:'Mar 30, 2026'},
+  {id:10, name:'Controversy flags', type:'Risk', folder:'vetting',  labels:['vetting','high-priority'],surf:['V','M'],     date:'Apr 02, 2026'},
+  {id:11, name:'Test Tag',          type:'Exposure', folder:'uncat',labels:[],                         surf:['A'],         date:'Sep 29, 2025'},
+  {id:12, name:'delete',            type:'Exposure', folder:'uncat',labels:[],                         surf:['A'],         date:'Sep 30, 2025'},
+];
+const ALL_LABELS = [...new Set(TAGS.flatMap(t=>t.labels))].sort();
+
+/* ============================== STATE ============================== */
+const state = {
+  view:'tree',
+  search:'',
+  folder:'all',                 // tree view only
+  types:new Set(),
+  labels:new Set(),
+  surfs:new Set(),
+};
+let modalSurface = 'V';
+let modalSel = new Set();
+
+/* ============================== HELPERS ============================== */
+const $ = s=>document.querySelector(s);
+const folder = id => FOLDERS.find(f=>f.id===id);
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function matches(t){
+  if(state.search && !t.name.toLowerCase().includes(state.search.toLowerCase())) return false;
+  if(state.types.size && !state.types.has(t.type)) return false;
+  if(state.labels.size && !t.labels.some(l=>state.labels.has(l))) return false;
+  if(state.surfs.size && !t.surf.some(s=>state.surfs.has(s))) return false;
+  return true;
+}
+const filtered = ()=>TAGS.filter(matches);
+
+function typeBadge(t){return `<span class="badge ${t==='Risk'?'risk':'exp'}">${t}</span>`;}
+function labelChips(ls){return ls.length? `<span class="lbls">${ls.map(l=>`<span class="lbl">${esc(l)}</span>`).join('')}</span>` : '<span style="color:#c4c8d0">—</span>';}
+function surfDots(surf){
+  return `<span class="surf">`+SURFACES.map(s=>{
+    const on=surf.includes(s.key);
+    return `<span class="sd ${s.cls} ${on?'on':''}" title="${s.name}${on?'':' — not enabled'}">${s.key}</span>`;
+  }).join('')+`</span>`;
+}
+function folderPill(id){const f=folder(id);return `<span class="folder-pill"><span class="fd" style="background:${f.color}"></span>${f.name}</span>`;}
+function ic(name){
+  const I={
+    grip:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+    share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8 15.7 6.4M8.3 13.2l7.4 4.4"/></svg>',
+    edit:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    trash:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>',
+    check:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg>',
+  };
+  return I[name]||'';
+}
+
+/* ============================== NAV ============================== */
+const NAV = [
+  ['Brands','◷'],['Topics','▤'],['Influencers','◑','chev'],['Featured Reports','▦','chev'],
+  ['Smart Alerts','◔','active'],['Custom Dashboards','▦'],['Summary Reports','◎'],['Data Explorer','⊟'],
+  ['Pulse','◍'],['Library','▥'],['Horizon','◈'],
+];
+function renderNav(){
+  $('#navList').innerHTML = NAV.map(([label,gl,flag])=>{
+    const cls = flag==='active'?'active':'';
+    const chev = flag==='chev'?'<span class="chev">›</span>':'';
+    return `<div class="nav-item ${cls}"><span style="width:18px;text-align:center;opacity:.7">${gl}</span><span>${label}</span>${chev}</div>`;
+  }).join('') + `<div class="nav-sep"></div>` +
+  [['Settings','⚙'],['My Collection','▤'],['Help','?','chev']].map(([l,g,f])=>
+    `<div class="nav-item">${`<span style="width:18px;text-align:center;opacity:.7">${g}</span>`}<span>${l}</span>${f==='chev'?'<span class="chev">›</span>':''}</div>`).join('');
+}
+
+/* ============================== FILTERS ============================== */
+function renderFilters(){
+  const typeChips = ['Risk','Exposure'].map(t=>{
+    const on=state.types.has(t);
+    const c=t==='Risk'?'var(--risk-ink)':'var(--exp-ink)';
+    return `<span class="chip ${on?'on':''}" data-f="type" data-v="${t}"><span class="dot" style="background:${c}"></span>${t}</span>`;
+  }).join('');
+  const surfChips = SURFACES.map(s=>{
+    const on=state.surfs.has(s.key);
+    return `<span class="chip ${on?'on':''}" data-f="surf" data-v="${s.key}"><span class="dot" style="background:${s.color}"></span>${s.short}</span>`;
+  }).join('');
+  const labelChipsHtml = ALL_LABELS.map(l=>{
+    const on=state.labels.has(l);
+    return `<span class="chip ${on?'on':''}" data-f="label" data-v="${l}">#${esc(l)}</span>`;
+  }).join('');
+  const any = state.types.size||state.labels.size||state.surfs.size||state.search;
+  $('#filters').innerHTML =
+    `<span class="flabel">Type</span>${typeChips}<span class="vsep"></span>`+
+    `<span class="flabel">Used in</span>${surfChips}<span class="vsep"></span>`+
+    `<span class="flabel">Labels</span>${labelChipsHtml}`+
+    (any?`<span class="vsep"></span><span class="chip" data-f="clear" style="color:#c0264a;border-color:#f3c6d1">✕ Clear</span>`:'');
+}
+
+/* ============================== VIEWS ============================== */
+function render(){
+  renderFilters();
+  const list = filtered();
+  $('#countNote').textContent = `${list.length} of ${TAGS.length} categories${state.view==='tree'&&state.folder!=='all'?` · folder: ${folder(state.folder).name}`:''}`;
+  if(state.view==='tree') renderTree(list);
+  else if(state.view==='sections') renderSections(list);
+  else renderKanban(list);
+}
+
+/* ---- 1. FOLDER TREE + TABLE ---- */
+function renderTree(list){
+  const counts = {}; FOLDERS.forEach(f=>counts[f.id]=TAGS.filter(matches).filter(t=>t.folder===f.id).length);
+  const total = filtered().length;
+  const treeRows = `<div class="tnode ${state.folder==='all'?'active':''}" data-folder="all">
+      <span class="fd" style="background:#16131f"></span><span>All categories</span><span class="cnt">${total}</span></div>`
+    + FOLDERS.map(f=>`<div class="tnode ${state.folder===f.id?'active':''}" data-folder="${f.id}">
+        <span class="fd" style="background:${f.color}"></span><span>${f.name}</span><span class="cnt">${counts[f.id]}</span></div>`).join('');
+
+  const rows = list.filter(t=>state.folder==='all'||t.folder===state.folder);
+  const body = rows.length? rows.map(t=>`
+    <tr>
+      <td><div class="tname"><span class="grip">${ic('grip')}</span>${esc(t.name)}</div></td>
+      <td>${typeBadge(t.type)}</td>
+      <td>${folderPill(t.folder)}</td>
+      <td>${labelChips(t.labels)}</td>
+      <td>${surfDots(t.surf)}</td>
+      <td><div class="by"><span class="avatar">LH</span>Levi Howard</div></td>
+      <td style="color:var(--ink-2);white-space:nowrap">${t.date}</td>
+      <td><div class="acts">
+        <button class="iconbtn" title="Share">${ic('share')}</button>
+        <button class="iconbtn" title="Edit">${ic('edit')}</button>
+        <button class="iconbtn danger" title="Delete">${ic('trash')}</button></div></td>
+    </tr>`).join('') : `<tr><td colspan="8"><div class="empty">No categories match your filters.</div></td></tr>`;
+
+  $('#view').innerHTML = `<div class="split">
+    <div class="tree">
+      <h4>Folders</h4>
+      ${treeRows}
+      <div class="tree-add"><div class="tnode" data-folder="__new" style="color:var(--accent)"><span style="width:9px">+</span><span>New folder</span></div></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Tag Name ↓</th><th>Type</th><th>Folder</th><th>Labels</th><th>Used in</th><th>Created by</th><th>Date Created</th><th style="text-align:right">Actions</th>
+        </tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  </div>`;
+
+  $('#view').querySelectorAll('[data-folder]').forEach(n=>n.onclick=()=>{
+    const f=n.dataset.folder;
+    if(f==='__new'){ alert('Prototype: opens "Create folder" dialog (name, color, default surfaces).'); return; }
+    state.folder=f; render();
+  });
+}
+
+/* ---- 2. GROUPED SECTIONS + CHIPS ---- */
+const collapsed = new Set();
+function renderSections(list){
+  const groups = FOLDERS.map(f=>({f, items:list.filter(t=>t.folder===f.id)})).filter(g=>g.items.length||state.search==='');
+  $('#view').innerHTML = `<div class="sections">` + FOLDERS.map(f=>{
+    const items=list.filter(t=>t.folder===f.id);
+    if(!items.length) return '';
+    const isC=collapsed.has(f.id);
+    return `<div class="sec ${isC?'collapsed':''}" data-sec="${f.id}">
+      <div class="sec-head">
+        <span class="caret">▾</span>
+        <span class="fd" style="background:${f.color}"></span>
+        <b>${f.name}</b>
+        <span class="cnt">${items.length} categor${items.length===1?'y':'ies'}</span>
+      </div>
+      <div class="sec-body">
+        ${items.map(t=>`<div class="srow">
+          <span class="grip">${ic('grip')}</span>
+          <span class="tname" style="flex:1">${esc(t.name)}</span>
+          ${typeBadge(t.type)}
+          ${labelChips(t.labels)}
+          <span style="display:flex;align-items:center;gap:7px;color:var(--ink-3);font-size:12px">Used in ${surfDots(t.surf)}</span>
+          <div class="acts">
+            <button class="iconbtn" title="Edit">${ic('edit')}</button>
+            <button class="iconbtn danger" title="Delete">${ic('trash')}</button></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+  if(!list.length) $('#view').innerHTML = `<div class="empty">No categories match your filters.</div>`;
+
+  $('#view').querySelectorAll('.sec-head').forEach(h=>h.onclick=()=>{
+    const id=h.parentElement.dataset.sec;
+    collapsed.has(id)?collapsed.delete(id):collapsed.add(id);
+    render();
+  });
+}
+
+/* ---- 3. KANBAN BOARD ---- */
+let dragId=null;
+function renderKanban(list){
+  $('#view').innerHTML = `<div class="board">` + FOLDERS.map(f=>{
+    const items=list.filter(t=>t.folder===f.id);
+    return `<div class="col" data-col="${f.id}">
+      <div class="col-head"><span class="fd" style="background:${f.color}"></span><b>${f.name}</b><span class="cnt">${items.length}</span></div>
+      ${items.map(t=>`<div class="card" draggable="true" data-id="${t.id}">
+        <div class="ct"><span class="grip">${ic('grip')}</span>${esc(t.name)}</div>
+        <div>${typeBadge(t.type)} ${labelChips(t.labels)}</div>
+        <div class="crow"><span style="font-size:12px;color:var(--ink-3)">Used in</span>${surfDots(t.surf)}</div>
+      </div>`).join('')}
+      <button class="col-add" data-addcol="${f.id}">+ Add category</button>
+    </div>`;
+  }).join('') + `</div>`;
+
+  $('#view').querySelectorAll('.card').forEach(c=>{
+    c.addEventListener('dragstart',e=>{dragId=+c.dataset.id;c.classList.add('dragging');});
+    c.addEventListener('dragend',()=>{dragId=null;c.classList.remove('dragging');});
+  });
+  $('#view').querySelectorAll('.col').forEach(col=>{
+    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drop');});
+    col.addEventListener('dragleave',()=>col.classList.remove('drop'));
+    col.addEventListener('drop',e=>{
+      e.preventDefault();col.classList.remove('drop');
+      if(dragId!=null){ const t=TAGS.find(x=>x.id===dragId); if(t){t.folder=col.dataset.col; render();} }
+    });
+  });
+  $('#view').querySelectorAll('[data-addcol]').forEach(b=>b.onclick=()=>alert('Prototype: opens "New smart tag" pre-filled with folder = '+folder(b.dataset.addcol).name));
+}
+
+/* ============================== TAG PICKER MODAL ============================== */
+function openModal(){
+  modalSurface='V';
+  // preselect categories already enabled for this surface
+  modalSel = new Set(TAGS.filter(t=>t.surf.includes(modalSurface)).map(t=>t.id));
+  $('#overlay').classList.add('open');
+  renderModal();
+}
+function renderModal(){
+  $('#modalTabs').innerHTML = SURFACES.map(s=>
+    `<div class="mtab ${modalSurface===s.key?'active':''}" data-s="${s.key}">
+       <span class="sd ${s.cls} on">${s.key}</span>${s.name}</div>`).join('');
+
+  const ctxTop = {
+    V:`<span>Vetting</span> <span class="who">@nutritionwithkate</span> — select the categories to evaluate this influencer against:`,
+    M:`<span>Monitoring list</span> <span class="who">Tech Execs — APAC</span> — categories tracked for every post:`,
+    A:`<span>Smart Alert</span> <span class="who">Brand crisis watch</span> — categories that trigger this alert:`,
+  }[modalSurface];
+
+  // group available categories by folder
+  const groups = FOLDERS.map(f=>({f,items:TAGS.filter(t=>t.folder===f.id)})).filter(g=>g.items.length);
+  const body = groups.map(g=>`
+    <div class="pickgroup">
+      <div class="pg-h"><span class="fd" style="background:${g.f.color}"></span>${g.f.name}</div>
+      ${g.items.map(t=>{
+        const sel=modalSel.has(t.id);
+        return `<div class="opt ${sel?'sel':''}" data-opt="${t.id}">
+          <span class="cbx">${sel?ic('check'):''}</span>
+          <span class="on-name">${esc(t.name)}</span>
+          ${typeBadge(t.type)}
+          ${labelChips(t.labels)}
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+
+  $('#modalBody').innerHTML = `<div class="ctx"><div class="ctx-top">${ctxTop}</div>${body}</div>`;
+  $('#modalNote').innerHTML = `<b style="color:var(--ink)">${modalSel.size}</b> categories selected · pulled live from your shared library`;
+
+  $('#modalTabs').querySelectorAll('.mtab').forEach(t=>t.onclick=()=>{
+    modalSurface=t.dataset.s;
+    modalSel = new Set(TAGS.filter(x=>x.surf.includes(modalSurface)).map(x=>x.id));
+    renderModal();
+  });
+  $('#modalBody').querySelectorAll('[data-opt]').forEach(o=>o.onclick=()=>{
+    const id=+o.dataset.opt; modalSel.has(id)?modalSel.delete(id):modalSel.add(id); renderModal();
+  });
+}
+function closeModal(){$('#overlay').classList.remove('open');}
+
+/* ============================== WIRE UP ============================== */
+$('#viewSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  state.view=b.dataset.view;
+  $('#viewSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));
+  render();
+});
+$('#search').oninput=e=>{state.search=e.target.value;render();};
+$('#filters').onclick=e=>{
+  const c=e.target.closest('.chip'); if(!c)return;
+  const f=c.dataset.f,v=c.dataset.v;
+  if(f==='clear'){state.types.clear();state.labels.clear();state.surfs.clear();state.search='';$('#search').value='';render();return;}
+  const set = f==='type'?state.types : f==='label'?state.labels : state.surfs;
+  set.has(v)?set.delete(v):set.add(v);
+  render();
+};
+$('#pickerBtn').onclick=openModal;
+$('#modalX').onclick=closeModal;
+$('#overlay').onclick=e=>{if(e.target===$('#overlay'))closeModal();};
+$('#modalApply').onclick=()=>{closeModal();};
+$('#newFolderBtn').onclick=()=>alert('Prototype: opens "Create folder" dialog — name, color, and which surfaces it should appear in by default.');
+$('#newTagBtn').onclick=()=>alert('Prototype: opens "New smart tag" — name, type (Risk/Exposure), folder, labels, and surfaces to enable (Vetting / Monitoring / Alerts).');
+
+renderNav();
+render();
+</script>
+</body>
+</html>
