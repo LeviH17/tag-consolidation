@@ -195,18 +195,36 @@
   .ctx{background:#f8f9fb;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:6px}
   .ctx .ctx-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;color:var(--ink-2)}
   .ctx .ctx-top .who{font-weight:650;color:var(--ink)}
-  .pickgroup{margin-bottom:12px}
-  .pickgroup .pg-h{display:flex;align-items:center;gap:7px;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
-    color:var(--ink-3);font-weight:700;margin:4px 2px 7px}
-  .pickgroup .pg-h .fd{width:8px;height:8px;border-radius:3px}
-  .opt{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;
-    background:#fff;margin-bottom:7px;cursor:pointer}
-  .opt:hover{border-color:#cfd2d9}
-  .opt.sel{border-color:var(--accent);background:#faf8ff}
-  .opt .cbx{width:18px;height:18px;border-radius:6px;border:1.5px solid #cfd2d9;display:grid;place-items:center;
+  /* multi-select dropdown */
+  .dd-label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin:2px 2px 7px}
+  .msel{position:relative}
+  .msel-field{display:flex;align-items:center;gap:8px;min-height:44px;padding:7px 10px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;cursor:pointer}
+  .msel-field:hover{border-color:#cfd2d9}
+  .msel.open .msel-field{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .msel-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+  .msel-ph{color:var(--ink-3)}
+  .mchip{display:inline-flex;align-items:center;gap:6px;background:#f2f3f5;border:1px solid var(--line);
+    border-radius:8px;padding:3px 5px 3px 9px;font-size:12.5px;font-weight:600}
+  .mchip .mc-dot{width:7px;height:7px;border-radius:50%}
+  .mchip .mc-rm{width:17px;height:17px;border-radius:5px;display:grid;place-items:center;color:var(--ink-3);
+    cursor:pointer;font-size:14px;line-height:1}
+  .mchip .mc-rm:hover{background:#e3e5e9;color:var(--ink)}
+  .msel-caret{color:var(--ink-3);transition:transform .15s;flex:0 0 auto}
+  .msel.open .msel-caret{transform:rotate(180deg)}
+  .msel-menu{margin-top:6px;background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 12px 32px rgba(16,18,25,.10);padding:8px;max-height:280px;overflow:auto;display:none}
+  .msel.open .msel-menu{display:block}
+  .msel-group-h{display:flex;align-items:center;gap:7px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-3);font-weight:700;margin:8px 6px 5px}
+  .msel-group-h .fd{width:8px;height:8px;border-radius:3px}
+  .msel-opt{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:9px;cursor:pointer}
+  .msel-opt:hover{background:#f5f5f8}
+  .msel-opt.sel{background:#faf8ff}
+  .msel-opt .cbx{width:18px;height:18px;border-radius:6px;border:1.5px solid #cfd2d9;display:grid;place-items:center;
     flex:0 0 18px;color:#fff}
-  .opt.sel .cbx{background:var(--accent);border-color:var(--accent)}
-  .opt .on-name{font-weight:600;flex:1}
+  .msel-opt.sel .cbx{background:var(--accent);border-color:var(--accent)}
+  .msel-opt .on-name{font-weight:600;flex:1}
   .modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
   .modal-foot .note{font-size:12.5px;color:var(--ink-2);flex:1}
   .x{margin-left:auto;cursor:pointer;color:var(--ink-3);font-size:20px;line-height:1}
@@ -337,6 +355,7 @@ const state = {
 };
 let modalSurface = 'V';
 let modalSel = new Set();
+let modalDDOpen = false;
 
 /* ============================== HELPERS ============================== */
 const $ = s=>document.querySelector(s);
@@ -541,6 +560,7 @@ function renderKanban(list){
 /* ============================== TAG PICKER MODAL ============================== */
 function openModal(){
   modalSurface='V';
+  modalDDOpen=false;
   // preselect categories already enabled for this surface
   modalSel = new Set(TAGS.filter(t=>t.surf.includes(modalSurface)).map(t=>t.id));
   $('#overlay').classList.add('open');
@@ -557,35 +577,62 @@ function renderModal(){
     A:`<span>Smart Alert</span> <span class="who">Brand crisis watch</span> — categories that trigger this alert:`,
   }[modalSurface];
 
-  // group available categories by folder
+  // selected categories shown as chips inside the field
+  const selectedTags = TAGS.filter(t=>modalSel.has(t.id));
+  const chips = selectedTags.length
+    ? selectedTags.map(t=>`<span class="mchip"><span class="mc-dot" style="background:${t.type==='Risk'?'var(--risk-ink)':'var(--exp-ink)'}"></span>${esc(t.name)}<span class="mc-rm" data-rm="${t.id}" title="Remove">×</span></span>`).join('')
+    : `<span class="msel-ph">Select categories…</span>`;
+
+  // dropdown menu options grouped by folder
   const groups = FOLDERS.map(f=>({f,items:TAGS.filter(t=>t.folder===f.id)})).filter(g=>g.items.length);
-  const body = groups.map(g=>`
-    <div class="pickgroup">
-      <div class="pg-h"><span class="fd" style="background:${g.f.color}"></span>${g.f.name}</div>
+  const menu = groups.map(g=>`
+      <div class="msel-group-h"><span class="fd" style="background:${g.f.color}"></span>${g.f.name}</div>
       ${g.items.map(t=>{
         const sel=modalSel.has(t.id);
-        return `<div class="opt ${sel?'sel':''}" data-opt="${t.id}">
+        return `<div class="msel-opt ${sel?'sel':''}" data-opt="${t.id}">
           <span class="cbx">${sel?ic('check'):''}</span>
           <span class="on-name">${esc(t.name)}</span>
           ${typeBadge(t.type)}
           ${labelChips(t.labels)}
         </div>`;
-      }).join('')}
-    </div>`).join('');
+      }).join('')}`).join('');
 
-  $('#modalBody').innerHTML = `<div class="ctx"><div class="ctx-top">${ctxTop}</div>${body}</div>`;
+  $('#modalBody').innerHTML = `<div class="ctx">
+      <div class="ctx-top">${ctxTop}</div>
+      <label class="dd-label">Categories</label>
+      <div class="msel ${modalDDOpen?'open':''}" id="msel">
+        <div class="msel-field" id="mselField">
+          <div class="msel-chips">${chips}</div>
+          <span class="msel-caret">▾</span>
+        </div>
+        <div class="msel-menu">${menu}</div>
+      </div>
+    </div>`;
   $('#modalNote').innerHTML = `<b style="color:var(--ink)">${modalSel.size}</b> categories selected · pulled live from your shared library`;
 
   $('#modalTabs').querySelectorAll('.mtab').forEach(t=>t.onclick=()=>{
-    modalSurface=t.dataset.s;
+    modalSurface=t.dataset.s; modalDDOpen=false;
     modalSel = new Set(TAGS.filter(x=>x.surf.includes(modalSurface)).map(x=>x.id));
     renderModal();
   });
-  $('#modalBody').querySelectorAll('[data-opt]').forEach(o=>o.onclick=()=>{
+  $('#mselField').onclick=e=>{
+    if(e.target.closest('[data-rm]')) return;     // chip removal handled separately
+    modalDDOpen=!modalDDOpen; renderModal();
+  };
+  $('#modalBody').querySelectorAll('[data-rm]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation(); modalSel.delete(+b.dataset.rm); renderModal();
+  });
+  $('#modalBody').querySelectorAll('.msel-opt').forEach(o=>o.onclick=()=>{
     const id=+o.dataset.opt; modalSel.has(id)?modalSel.delete(id):modalSel.add(id); renderModal();
   });
 }
 function closeModal(){$('#overlay').classList.remove('open');}
+// close the category dropdown when clicking outside it
+document.addEventListener('click', e=>{
+  if(!modalDDOpen || !$('#overlay').classList.contains('open')) return;
+  if(e.target.closest('#msel')) return;
+  modalDDOpen=false; renderModal();
+});
 
 /* ============================== WIRE UP ============================== */
 $('#viewSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
