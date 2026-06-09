@@ -401,15 +401,15 @@
 const KINDS = [
   {key:'boolean',         short:'Regular Tags',              long:'Regular Tags',
    tagline:'Boolean keyword logic — exact terms, operators, wildcards', icon:'⚡', iconBg:'#16131f',
-   surfaces:['S'],
+   surfaces:['S','V','M'], defaultSurfaces:['S'],
    newLabel:'+ New regular tag',  emptyLabel:'regular tag'},
   {key:'brand-risk',      short:'Search Categories',  long:'Search Categories',
    tagline:'Natural-language prompts applied to brands &amp; topics', icon:'◆', iconBg:'#7c3aed',
-   surfaces:['E'],
+   surfaces:['E','V','M'], defaultSurfaces:['E'],
    newLabel:'+ New search category', emptyLabel:'search category'},
   {key:'influencer-risk', short:'Influencer Risk Categories',     long:'Influencer Risk Categories',
    tagline:'Natural-language prompts applied to influencers',icon:'◉', iconBg:'#2563eb',
-   surfaces:['V','M'],
+   surfaces:['V','M'], defaultSurfaces:['V','M'],
    newLabel:'+ New risk category', emptyLabel:'risk category'},
 ];
 const SURFACES = [
@@ -435,37 +435,37 @@ let TAGS = [
    surf:['S'], date:'Aug 22, 2025'},
   {id:2, kind:'boolean', name:'Quality mentions', folder:'marketing',
    query:'(quality OR defect* OR recall*) NEAR/5 (issue* OR problem* OR complaint*)',
-   surf:['S'], date:'Apr 07, 2026'},
+   surf:['S','V','M'], date:'Apr 07, 2026'},
   {id:3, kind:'boolean', name:'Launch buzz', folder:'marketing',
    query:'(launch OR release OR debut) AND ("Vision Pro" OR "M5") NOT (delay OR pushed)',
    surf:['S'], date:'May 11, 2026'},
   {id:4, kind:'boolean', name:'Spokesperson watch', folder:'comms',
    query:'(CEO OR "chief executive") NEAR/10 (controversy OR scandal OR statement)',
-   surf:['S'], date:'Feb 14, 2026'},
+   surf:['S','V'], date:'Feb 14, 2026'},
   {id:5, kind:'boolean', name:'Earnings mentions', folder:'finance',
    query:'(earnings OR EPS OR "Q1" OR "Q2" OR "Q3" OR "Q4") NEAR/5 (beat OR miss OR guidance)',
    surf:['S'], date:'Mar 04, 2026'},
   {id:6, kind:'boolean', name:'Layoff signals', folder:'comms',
    query:'(layoff* OR "workforce reduction" OR "headcount cut" OR "let go") AND employees',
-   surf:['S'], date:'Jan 28, 2026'},
+   surf:['S','M'], date:'Jan 28, 2026'},
   {id:7, kind:'boolean', name:'Recall keywords', folder:'legal',
    query:'recall* AND (CPSC OR FDA OR voluntary) NOT (election OR political)',
    surf:['S'], date:'Feb 02, 2026'},
   {id:8, kind:'boolean', name:'Partnership wins', folder:'marketing',
    query:'(partnership OR collab* OR "teaming up" OR exclusive) AND (announce* OR launch*)',
-   surf:['S'], date:'Apr 19, 2026'},
+   surf:['S','V'], date:'Apr 19, 2026'},
   {id:9, kind:'boolean', name:'Stock symbol watch', folder:'finance',
    query:'($AAPL OR $TSLA OR $NVDA) NEAR/10 (target OR upgrade OR downgrade)',
    surf:[], date:'May 22, 2026'},
   {id:10, kind:'boolean', name:'ESG mentions', folder:'marketing',
    query:'(ESG OR sustainability OR "carbon neutral" OR "net zero") AND commitment',
-   surf:['S'], date:'Mar 16, 2026'},
+   surf:['S','V','M'], date:'Mar 16, 2026'},
   {id:11, kind:'boolean', name:'Outage chatter', folder:'risk',
    query:'(outage OR down OR "not working" OR "service disruption") AND (Apple OR iCloud OR App Store)',
    surf:['S'], date:'Apr 03, 2026'},
   {id:12, kind:'boolean', name:'Executive social posts', folder:'comms',
    query:'(from:tim_cook OR from:jeffwilliams) AND (announce* OR statement OR "we are")',
-   surf:[], date:'May 09, 2026'},
+   surf:['V','M'], date:'May 09, 2026'},
 
   /* ---- Search Categories (NL prompts for brands & topics) ---- */
   {id:13, kind:'brand-risk', name:'Misleading marketing claims', folder:'risk', severity:'High',
@@ -473,34 +473,34 @@ let TAGS = [
    surf:['E'], date:'Mar 18, 2026'},
   {id:14, kind:'brand-risk', name:'Product safety concerns', folder:'risk', severity:'Critical',
    prompt:'Discussion of safety incidents, defects, malfunctions, or harm caused by brand products, including consumer complaints describing physical or health impact.',
-   surf:['E'], date:'Jan 18, 2026'},
+   surf:['E','V','M'], date:'Jan 18, 2026'},
   {id:15, kind:'brand-risk', name:'Boycott / consumer backlash', folder:'comms', severity:'High',
    prompt:'Coordinated or viral calls to boycott the brand, organized backlash campaigns, or sustained negative sentiment that threatens commercial outcomes.',
-   surf:['E'], date:'Apr 22, 2026'},
+   surf:['E','M'], date:'Apr 22, 2026'},
   {id:16, kind:'brand-risk', name:'Geopolitical exposure', folder:'risk', severity:'Medium',
    prompt:'Posts linking the brand to politically sensitive regions, sanctioned entities, supply-chain dependencies in contested geographies, or government investigations.',
    surf:['E'], date:'Feb 09, 2026'},
   {id:17, kind:'brand-risk', name:'Data breach / privacy incidents', folder:'legal', severity:'Critical',
    prompt:'Reports of data leaks, unauthorized access, security incidents, or privacy violations involving customer information held by the brand.',
-   surf:['E'], date:'Feb 27, 2026'},
+   surf:['E','V','M'], date:'Feb 27, 2026'},
   {id:18, kind:'brand-risk', name:'Customer service complaints', folder:'comms', severity:'Medium',
    prompt:'Sustained customer complaints about slow response times, unhelpful support, billing issues, or post-purchase problems with the brand.',
    surf:['E'], date:'Mar 05, 2026'},
   {id:19, kind:'brand-risk', name:'Workplace culture complaints', folder:'comms', severity:'Medium',
    prompt:'Employee or ex-employee allegations of toxic culture, harassment, discrimination, retaliation, or other workplace conduct concerns involving the brand.',
-   surf:['E'], date:'Apr 11, 2026'},
+   surf:['E','V'], date:'Apr 11, 2026'},
   {id:20, kind:'brand-risk', name:'Environmental impact concerns', folder:'risk', severity:'Medium',
    prompt:'Allegations of environmental harm caused by the brand: pollution, emissions, waste handling, deforestation, or contested environmental claims.',
    surf:['E'], date:'May 03, 2026'},
   {id:21, kind:'brand-risk', name:'Anti-competitive concerns', folder:'legal', severity:'High',
    prompt:'Accusations or coverage of anti-competitive behavior, anti-trust action, monopolistic practices, or unfair market conduct by the brand.',
-   surf:['E'], date:'Jan 09, 2026'},
+   surf:['E','V','M'], date:'Jan 09, 2026'},
   {id:22, kind:'brand-risk', name:'AI ethics & automation backlash', folder:'marketing', severity:'Medium',
    prompt:'Public criticism of AI products or automation initiatives released by the brand — bias, hallucination, job-displacement concerns, or unsafe deployment.',
-   surf:['E'], date:'Apr 25, 2026'},
+   surf:['E','M'], date:'Apr 25, 2026'},
   {id:23, kind:'brand-risk', name:'Executive misconduct allegations', folder:'comms', severity:'Critical',
    prompt:'Accusations of personal misconduct, financial impropriety, or unethical behavior involving named executives at the brand.',
-   surf:['E'], date:'Feb 21, 2026'},
+   surf:['E','V','M'], date:'Feb 21, 2026'},
   {id:24, kind:'brand-risk', name:'Supply-chain labor concerns', folder:'risk', severity:'High',
    prompt:'Reports of forced labor, child labor, unsafe conditions, or wage violations across the brand supply chain or contract manufacturers.',
    surf:[], date:'Mar 28, 2026'},
@@ -523,13 +523,13 @@ let TAGS = [
    surf:['V','M'], date:'Feb 18, 2026'},
   {id:30, kind:'influencer-risk', name:'Drug / substance promotion', folder:'vetting', severity:'High',
    prompt:'Influencer references, glorifies, or appears to promote use of recreational drugs, alcohol abuse, or other controlled substances in their content.',
-   surf:['V','M'], date:'Mar 12, 2026'},
+   surf:['M'], date:'Mar 12, 2026'},
   {id:31, kind:'influencer-risk', name:'Political extremism', folder:'vetting', severity:'Critical',
    prompt:'Influencer expresses or amplifies views aligned with extremist political movements, conspiracy theories, or incitement to political violence.',
    surf:['V','M'], date:'Apr 30, 2026'},
   {id:32, kind:'influencer-risk', name:'Undisclosed sponsorships', folder:'legal', severity:'High',
    prompt:'Pattern of promoting products or brands without clear #ad / #sponsored disclosure as required by FTC guidelines and platform rules.',
-   surf:['V','M'], date:'Jan 22, 2026'},
+   surf:['V'], date:'Jan 22, 2026'},
   {id:33, kind:'influencer-risk', name:'Gambling promotion', folder:'vetting', severity:'Medium',
    prompt:'Influencer regularly promotes online gambling, sports betting, casinos, or crypto-trading platforms with predatory characteristics.',
    surf:['V'], date:'May 05, 2026'},
@@ -538,10 +538,10 @@ let TAGS = [
    surf:['V','M'], date:'Mar 24, 2026'},
   {id:35, kind:'influencer-risk', name:'Crypto / NFT shilling', folder:'risk', severity:'Medium',
    prompt:'Influencer aggressively promotes specific crypto tokens, NFT projects, or speculative financial products without disclosure of holdings.',
-   surf:['V','M'], date:'Feb 06, 2026'},
+   surf:['M'], date:'Feb 06, 2026'},
   {id:36, kind:'influencer-risk', name:'Harassment / pile-on behavior', folder:'risk', severity:'Medium',
    prompt:'Influencer has a history of directing followers toward targeted harassment, doxxing, or coordinated pile-ons against individuals or groups.',
-   surf:['V'], date:'May 14, 2026'},
+   surf:[], date:'May 14, 2026'},
 ];
 
 /* ============================== STATE ============================== */
@@ -903,7 +903,7 @@ function openCreate(){
   createState.prompt = '';
   createState.severity = 'Medium';
   createState.folder = (state.folder && state.folder!=='all') ? state.folder : 'uncat';
-  createState.surfaces = new Set(k.surfaces);    // default all surfaces enabled
+  createState.surfaces = new Set(k.defaultSurfaces || k.surfaces);  // primary surface(s) on by default
   createState.newFolder = {open:false, name:'', color:FOLDER_COLORS[6]};
   createState.err = '';
   $('#createOverlay').classList.add('open');
@@ -913,7 +913,8 @@ function openCreate(){
 
 function setKind(kind){
   createState.kind = kind;
-  createState.surfaces = new Set(kindDef(kind).surfaces);
+  const k = kindDef(kind);
+  createState.surfaces = new Set(k.defaultSurfaces || k.surfaces);
   createState.err = '';
   renderCreate();
 }
@@ -929,8 +930,8 @@ function renderCreate(){
     isBR   ? 'New search category' :
              'New risk category';
   $('#createSub').textContent =
-    isBool ? 'Boolean keyword query — applied to Simple Alerts.' :
-    isBR   ? 'Natural-language prompt evaluated by AI — applied to Enhanced Alerts.' :
+    isBool ? 'Boolean keyword logic — primarily applied to Simple Alerts; can also feed Vetting & Monitoring.' :
+    isBR   ? 'Natural-language prompt evaluated by AI — primarily applied to Enhanced Alerts; can also feed Vetting & Monitoring.' :
              'Natural-language prompt evaluated by AI — applied to Influencer Vetting and Monitoring.';
 
   /* definition field */
