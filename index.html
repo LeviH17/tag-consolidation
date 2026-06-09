@@ -116,14 +116,44 @@
   .sev.low{background:#dcfce7;color:#15803d}
 
   /* surface pills */
-  .surf{display:inline-flex;gap:5px;align-items:center}
-  .sd{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:800;
-    background:#f1f2f5;color:#b6bac2;letter-spacing:.2px}
+  .surf{display:inline-flex;gap:6px;align-items:center}
+  .sd{position:relative;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:10px;
+    font-weight:800;background:#f1f2f5;color:#b6bac2;letter-spacing:.2px}
   .sd.on{color:#fff}
   .sd.s.on{background:#d97706}
   .sd.e.on{background:#7c3aed}
   .sd.v.on{background:#2563eb}
   .sd.m.on{background:#0d9488}
+  .sd.clickable{cursor:pointer;transition:transform .08s}
+  .sd.clickable:hover{transform:translateY(-1px)}
+  .sd .sd-cnt{position:absolute;top:-5px;right:-6px;min-width:14px;height:14px;padding:0 3px;border-radius:8px;
+    background:#16131f;color:#fff;font-size:9px;font-weight:800;display:grid;place-items:center;line-height:1;
+    border:1.5px solid #fff;letter-spacing:0}
+
+  /* applied-to popover */
+  .surfpop{position:absolute;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 18px 48px rgba(16,18,25,.18);min-width:280px;max-width:340px;display:none}
+  .surfpop.open{display:block}
+  .surfpop-h{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--line-soft)}
+  .surfpop-h .sd{width:24px;height:24px;font-size:11px;flex:0 0 24px}
+  .surfpop-meta{flex:1;line-height:1.25;min-width:0}
+  .surfpop-meta b{font-size:13px;display:block}
+  .surfpop-sub{font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .surfpop-h .x{cursor:pointer;font-size:18px;line-height:1;color:var(--ink-3);width:22px;text-align:center}
+  .surfpop-h .x:hover{color:var(--ink)}
+  .surfpop-body{padding:6px 5px;max-height:240px;overflow:auto}
+  .surfpop-row{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:13px}
+  .surfpop-row:hover{background:#f5f5f8}
+  .surfpop-row.on{background:#faf8ff}
+  .surfpop-row .cbx{width:17px;height:17px;border-radius:5px;border:1.5px solid #cfd2d9;display:grid;place-items:center;
+    flex:0 0 17px;color:#fff}
+  .surfpop-row.on .cbx{background:var(--accent);border-color:var(--accent)}
+  .surfpop-row .inst-name{flex:1;font-weight:550;color:var(--ink)}
+  .surfpop-empty{padding:18px 12px;text-align:center;color:var(--ink-3);font-size:12.5px}
+  .surfpop-foot{border-top:1px solid var(--line-soft);padding:6px 5px}
+  .surfpop-add{background:transparent;border:0;color:var(--accent);font-weight:600;padding:7px 10px;cursor:pointer;
+    font-size:12.5px;font-family:inherit;border-radius:7px;width:100%;text-align:left}
+  .surfpop-add:hover{background:var(--accent-soft)}
 
   .folder-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#5b606b}
   .folder-pill .fd{width:8px;height:8px;border-radius:3px}
@@ -396,6 +426,9 @@
   </div>
 </div>
 
+<!-- APPLIED-TO POPOVER -->
+<div id="surfpop" class="surfpop"></div>
+
 <script>
 /* ============================== DATA ============================== */
 const KINDS = [
@@ -419,6 +452,38 @@ const SURFACES = [
   {key:'M', cls:'m', name:'Influencer Monitoring', short:'Monitoring'},
 ];
 const SEVERITIES = ['Critical','High','Medium','Low'];
+const INSTANCES = {
+  S: [
+    {id:'sa1', name:'Brand crisis watch'},
+    {id:'sa2', name:'Competitor mentions'},
+    {id:'sa3', name:'Earnings season — Q1'},
+    {id:'sa4', name:'Product launch chatter'},
+    {id:'sa5', name:'Executive communications'},
+    {id:'sa6', name:'Quality & support escalations'},
+  ],
+  E: [
+    {id:'ea1', name:'Brand reputation watch'},
+    {id:'ea2', name:'Regulatory & legal exposure'},
+    {id:'ea3', name:'AI & automation criticism'},
+    {id:'ea4', name:'Customer experience signals'},
+    {id:'ea5', name:'Geopolitical & supply chain'},
+  ],
+  V: [
+    {id:'v1', name:'@nutritionwithkate'},
+    {id:'v2', name:'@techbroreviews'},
+    {id:'v3', name:'@fashionforward'},
+    {id:'v4', name:'@traveltheglobe'},
+    {id:'v5', name:'@fitwithjamie'},
+    {id:'v6', name:'@hometalkdaily'},
+  ],
+  M: [
+    {id:'m1', name:'Tech Execs — APAC'},
+    {id:'m2', name:'Beauty creators — Q2 campaign'},
+    {id:'m3', name:'Sports influencers'},
+    {id:'m4', name:'Crypto commentators'},
+    {id:'m5', name:'Lifestyle macro creators'},
+  ],
+};
 const FOLDERS = [
   {id:'risk',      name:'Risk Management',     color:'#dc2626'},
   {id:'marketing', name:'Brand Marketing',     color:'#7c3aed'},
@@ -544,6 +609,28 @@ let TAGS = [
    surf:[], date:'May 14, 2026'},
 ];
 
+/* Migration: convert each tag's surf[] -> applications{} with deterministic seed instances.
+   applications looks like { S:['sa1','sa3'], V:['v2'], ... } — which specific instances of each surface
+   the tag is currently applied to.  surf is then removed. */
+(function seedApplications(){
+  TAGS.forEach(t=>{
+    if(t.applications || !t.surf) return;
+    t.applications = {};
+    t.surf.forEach(s=>{
+      const all = INSTANCES[s] || [];
+      if(!all.length){ t.applications[s] = []; return; }
+      const count = 1 + (t.id * 17 + s.charCodeAt(0)) % Math.min(3, all.length);
+      const picks = new Set();
+      for(let i=0; picks.size < count && i < count*4; i++){
+        const idx = (t.id * 11 + i * 7 + s.charCodeAt(0) * 3) % all.length;
+        picks.add(all[idx].id);
+      }
+      t.applications[s] = [...picks];
+    });
+    delete t.surf;
+  });
+})();
+
 /* ============================== STATE ============================== */
 const state = {
   kind:'boolean',
@@ -571,11 +658,14 @@ const kindDef = k => KINDS.find(x=>x.key===k);
 const surfaceDef = k => SURFACES.find(s=>s.key===k);
 const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
+function appliedCount(t, s){ return (t.applications && t.applications[s] || []).length; }
+function appliedIds(t, s){ return (t.applications && t.applications[s] || []).slice(); }
+
 function matches(t){
   if(t.kind!==state.kind) return false;
   if(state.search && !t.name.toLowerCase().includes(state.search.toLowerCase())) return false;
   if(state.severities.size && (!t.severity || !state.severities.has(t.severity))) return false;
-  if(state.surfs.size && !t.surf.some(s=>state.surfs.has(s))) return false;
+  if(state.surfs.size && ![...state.surfs].some(s=>appliedCount(t,s)>0)) return false;
   return true;
 }
 const filtered = ()=>TAGS.filter(matches);
@@ -585,11 +675,14 @@ function sevBadge(s){
   const cls = s==='Critical'?'crit':s==='High'?'high':s==='Medium'?'med':'low';
   return `<span class="sev ${cls}">${s}</span>`;
 }
-function surfDots(surf,kindKey){
+function surfDots(tag, kindKey){
   const allowed = kindDef(kindKey).surfaces;
   return `<span class="surf">`+allowed.map(k=>{
-    const s=surfaceDef(k),on=surf.includes(k);
-    return `<span class="sd ${s.cls} ${on?'on':''}" title="${s.name}${on?'':' — not enabled'}">${k}</span>`;
+    const s=surfaceDef(k);
+    const cnt = appliedCount(tag,k);
+    const on = cnt>0;
+    const titleApplied = on ? ` — applied to ${cnt} ${cnt===1?'item':'items'}` : ' — click to apply';
+    return `<span class="sd ${s.cls} ${on?'on':''} clickable" data-popsurf="${k}" data-poptag="${tag.id}" title="${s.name}${titleApplied}">${k}${cnt>1?`<span class="sd-cnt">${cnt}</span>`:''}</span>`;
   }).join('')+`</span>`;
 }
 function folderPill(id){const f=folder(id);return `<span class="folder-pill"><span class="fd" style="background:${f.color}"></span>${f.name}</span>`;}
@@ -697,7 +790,7 @@ function renderTree(list){
       return `<tr>
         <td><div class="tname"><span class="grip">${ic('grip')}</span>${esc(t.name)}</div></td>
         <td>${folderPill(t.folder)}</td>
-        <td>${surfDots(t.surf,t.kind)}</td>
+        <td>${surfDots(t,t.kind)}</td>
         <td><div class="by"><span class="avatar">LH</span>Levi Howard</div></td>
         <td style="color:var(--ink-2);white-space:nowrap">${t.date}</td>
         <td>${acts}</td>
@@ -707,7 +800,7 @@ function renderTree(list){
       <td><div class="tname"><span class="grip">${ic('grip')}</span>${esc(t.name)}</div></td>
       <td>${folderPill(t.folder)}</td>
       <td>${sevBadge(t.severity)}</td>
-      <td>${surfDots(t.surf,t.kind)}</td>
+      <td>${surfDots(t,t.kind)}</td>
       <td><div class="by"><span class="avatar">LH</span>Levi Howard</div></td>
       <td style="color:var(--ink-2);white-space:nowrap">${t.date}</td>
       <td>${acts}</td>
@@ -754,7 +847,7 @@ function renderSections(list){
           <span class="grip">${ic('grip')}</span>
           <span class="tname">${esc(t.name)}</span>
           ${t.kind!=='boolean'?sevBadge(t.severity):''}
-          <span style="display:flex;align-items:center;gap:7px;color:var(--ink-3);font-size:12px;margin-left:auto">${surfDots(t.surf,t.kind)}</span>
+          <span style="display:flex;align-items:center;gap:7px;color:var(--ink-3);font-size:12px;margin-left:auto">${surfDots(t,t.kind)}</span>
           <div class="acts">
             <button class="iconbtn" title="Edit">${ic('edit')}</button>
             <button class="iconbtn danger" title="Delete">${ic('trash')}</button></div>
@@ -782,7 +875,7 @@ function renderKanban(list){
         <div class="ct"><span class="grip">${ic('grip')}</span>${esc(t.name)}</div>
         <div class="crow">
           <span style="display:flex;gap:6px;align-items:center">${t.kind!=='boolean'?sevBadge(t.severity):''}</span>
-          ${surfDots(t.surf,t.kind)}
+          ${surfDots(t,t.kind)}
         </div>
       </div>`).join('')}
       <button class="col-add" data-addcol="${f.id}">+ Add</button>
@@ -808,7 +901,7 @@ function renderKanban(list){
 function openModal(){
   modalSurface='S';
   modalDDOpen=false;
-  modalSel = new Set(TAGS.filter(t=>t.surf.includes(modalSurface)).map(t=>t.id));
+  modalSel = new Set(TAGS.filter(t=>appliedCount(t,modalSurface)>0).map(t=>t.id));
   $('#overlay').classList.add('open');
   renderModal();
 }
@@ -871,7 +964,7 @@ function renderModal(){
 
   $('#modalTabs').querySelectorAll('.mtab').forEach(t=>t.onclick=()=>{
     modalSurface=t.dataset.s; modalDDOpen=false;
-    modalSel = new Set(TAGS.filter(x=>x.surf.includes(modalSurface)).map(x=>x.id));
+    modalSel = new Set(TAGS.filter(x=>appliedCount(x,modalSurface)>0).map(x=>x.id));
     renderModal();
   });
   $('#mselField').onclick=e=>{
@@ -890,6 +983,78 @@ document.addEventListener('click', e=>{
   if(!modalDDOpen || !$('#overlay').classList.contains('open')) return;
   if(e.target.closest('#msel')) return;
   modalDDOpen=false; renderModal();
+});
+
+/* ============================== APPLIED-TO POPOVER ============================== */
+let popState = null;   // {tagId, surface, top, left}
+
+function openSurfPop(tagId, surface, anchorEl){
+  const rect = anchorEl.getBoundingClientRect();
+  const sx = window.scrollX, sy = window.scrollY;
+  const popW = 320;
+  let left = rect.left + sx;
+  if(left + popW > window.innerWidth + sx - 8) left = window.innerWidth + sx - popW - 8;
+  popState = {tagId, surface, top: rect.bottom + sy + 6, left};
+  renderSurfPop();
+}
+function closeSurfPop(){ popState = null; $('#surfpop').classList.remove('open'); }
+
+function renderSurfPop(){
+  if(!popState) return;
+  const tag = TAGS.find(t=>t.id===popState.tagId);
+  if(!tag){ closeSurfPop(); return; }
+  const surf = popState.surface;
+  const s = surfaceDef(surf);
+  const all = INSTANCES[surf] || [];
+  const enabled = appliedIds(tag, surf);
+
+  const rows = all.length ? all.map(inst=>{
+    const on = enabled.includes(inst.id);
+    return `<div class="surfpop-row ${on?'on':''}" data-inst="${inst.id}">
+      <span class="cbx">${on?ic('check'):''}</span>
+      <span class="inst-name">${esc(inst.name)}</span>
+    </div>`;
+  }).join('') : `<div class="surfpop-empty">No ${s.name.toLowerCase()} yet.</div>`;
+
+  $('#surfpop').innerHTML = `
+    <div class="surfpop-h">
+      <span class="sd ${s.cls} on">${surf}</span>
+      <div class="surfpop-meta">
+        <b>${s.name}</b>
+        <div class="surfpop-sub">"${esc(tag.name)}" — applied to ${enabled.length} of ${all.length}</div>
+      </div>
+      <span class="x" data-popclose>×</span>
+    </div>
+    <div class="surfpop-body">${rows}</div>
+    <div class="surfpop-foot">
+      <button class="surfpop-add">+ New ${s.short.toLowerCase().replace(/s$/,'')}</button>
+    </div>`;
+  $('#surfpop').style.top = popState.top + 'px';
+  $('#surfpop').style.left = popState.left + 'px';
+  $('#surfpop').classList.add('open');
+
+  $('#surfpop').querySelectorAll('[data-inst]').forEach(r=>r.onclick=()=>{
+    const id = r.dataset.inst;
+    if(!tag.applications) tag.applications = {};
+    if(!tag.applications[surf]) tag.applications[surf] = [];
+    const arr = tag.applications[surf];
+    const idx = arr.indexOf(id);
+    if(idx>=0) arr.splice(idx,1); else arr.push(id);
+    render();          // refresh main view (pill counts)
+    renderSurfPop();   // refresh popover state
+  });
+  $('#surfpop').querySelector('[data-popclose]').onclick = closeSurfPop;
+  $('#surfpop').querySelector('.surfpop-add').onclick = ()=>alert(`Prototype: opens dialog to create a new ${s.name.toLowerCase().replace(/s$/,'')}.`);
+}
+
+document.addEventListener('click', e=>{
+  const pill = e.target.closest('[data-popsurf]');
+  if(pill){
+    e.stopPropagation();
+    openSurfPop(+pill.dataset.poptag, pill.dataset.popsurf, pill);
+    return;
+  }
+  if(popState && !e.target.closest('#surfpop')) closeSurfPop();
 });
 
 /* ============================== CREATE MODAL ============================== */
@@ -988,7 +1153,7 @@ function renderCreate(){
           </div>`;
         }).join('')}
       </div>
-      <div class="help">Where this ${isBool?'regular tag':(isBR?'search category':'risk category')} appears. You can change later from the picker.</div>
+      <div class="help">Surface types this ${isBool?'regular tag':(isBR?'search category':'risk category')} is eligible for. After creating, click any pill in the list to apply it to specific alerts, vetting candidates, or monitoring lists.</div>
     </div>`;
 
   /* ---- Type chooser: 3-way (Regular / Search / Risk) ---- */
@@ -1068,10 +1233,12 @@ function submitCreate(){
 
   const newId = (TAGS.length ? Math.max(...TAGS.map(t=>t.id)) : 0) + 1;
   const today = new Date().toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'});
+  const applications = {};
+  [...createState.surfaces].forEach(s=>{ applications[s] = []; });   // initialized empty; user applies via pill popover
   const tag = {
     id:newId, kind:k.key, name:createState.name.trim(),
     folder:createState.folder,
-    surf:[...createState.surfaces], date:today,
+    applications, date:today,
   };
   if(isBool) tag.query = createState.query.trim();
   else { tag.prompt = createState.prompt.trim(); tag.severity = createState.severity; }
