@@ -120,9 +120,8 @@
   .sd{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:800;
     background:#f1f2f5;color:#b6bac2;letter-spacing:.2px}
   .sd.on{color:#fff}
-  .sd.b.on{background:#7c3aed}
-  .sd.t.on{background:#c026d3}
-  .sd.a.on{background:#d97706}
+  .sd.s.on{background:#d97706}
+  .sd.e.on{background:#7c3aed}
   .sd.v.on{background:#2563eb}
   .sd.m.on{background:#0d9488}
 
@@ -402,11 +401,11 @@
 const KINDS = [
   {key:'boolean',         short:'Regular Tags',              long:'Regular Tags',
    tagline:'Boolean keyword logic — exact terms, operators, wildcards', icon:'⚡', iconBg:'#16131f',
-   surfaces:['B','T','A'],
+   surfaces:['S'],
    newLabel:'+ New regular tag',  emptyLabel:'regular tag'},
   {key:'brand-risk',      short:'Search Categories',  long:'Search Categories',
    tagline:'Natural-language prompts applied to brands &amp; topics', icon:'◆', iconBg:'#7c3aed',
-   surfaces:['B','T'],
+   surfaces:['E'],
    newLabel:'+ New search category', emptyLabel:'search category'},
   {key:'influencer-risk', short:'Influencer Risk Categories',     long:'Influencer Risk Categories',
    tagline:'Natural-language prompts applied to influencers',icon:'◉', iconBg:'#2563eb',
@@ -414,9 +413,8 @@ const KINDS = [
    newLabel:'+ New risk category', emptyLabel:'risk category'},
 ];
 const SURFACES = [
-  {key:'B', cls:'b', name:'Brands',                short:'Brands'},
-  {key:'T', cls:'t', name:'Topics',                short:'Topics'},
-  {key:'A', cls:'a', name:'Smart Alerts',          short:'Alerts'},
+  {key:'S', cls:'s', name:'Simple Alerts',         short:'Simple alerts'},
+  {key:'E', cls:'e', name:'Enhanced Alerts',       short:'Enhanced alerts'},
   {key:'V', cls:'v', name:'Influencer Vetting',    short:'Vetting'},
   {key:'M', cls:'m', name:'Influencer Monitoring', short:'Monitoring'},
 ];
@@ -432,30 +430,30 @@ let TAGS = [
   /* ---- Regular Tags (boolean) ---- */
   {id:1, kind:'boolean', name:'Silicon shield', folder:'marketing', labels:['geopolitics'],
    query:'("silicon shield" OR "Taiwan chip*") AND (TSMC OR semiconductor*) NOT job*',
-   surf:['B','T','A'], date:'Aug 22, 2025'},
+   surf:['S'], date:'Aug 22, 2025'},
   {id:2, kind:'boolean', name:'Quality mentions', folder:'marketing', labels:['sentiment'],
    query:'(quality OR defect* OR recall*) NEAR/5 (issue* OR problem* OR complaint*)',
-   surf:['B','T','A'], date:'Apr 07, 2026'},
+   surf:['S'], date:'Apr 07, 2026'},
   {id:3, kind:'boolean', name:'Launch buzz', folder:'marketing', labels:['q2-launch'],
    query:'(launch OR release OR debut) AND ("Vision Pro" OR "M5") NOT (delay OR pushed)',
-   surf:['B','T'], date:'May 11, 2026'},
+   surf:['S'], date:'May 11, 2026'},
   {id:4, kind:'boolean', name:'Spokesperson watch', folder:'comms', labels:['exec'],
    query:'(CEO OR "chief executive") NEAR/10 (controversy OR scandal OR statement)',
-   surf:['B','A'], date:'Feb 14, 2026'},
+   surf:['S'], date:'Feb 14, 2026'},
 
   /* ---- Search Categories (NL prompts for brands & topics) ---- */
   {id:5, kind:'brand-risk', name:'Misleading marketing claims', folder:'risk', labels:['legal','compliance'], severity:'High',
    prompt:'Posts that accuse the brand of making unsubstantiated, exaggerated, or deceptive marketing claims — including allegations of false advertising or greenwashing.',
-   surf:['B','T'], date:'Mar 18, 2026'},
+   surf:['E'], date:'Mar 18, 2026'},
   {id:6, kind:'brand-risk', name:'Product safety concerns', folder:'risk', labels:['legal','high-priority'], severity:'Critical',
    prompt:'Discussion of safety incidents, defects, malfunctions, or harm caused by the brand’s products, including consumer complaints describing physical or health impact.',
-   surf:['B','T'], date:'Jan 18, 2026'},
+   surf:['E'], date:'Jan 18, 2026'},
   {id:7, kind:'brand-risk', name:'Boycott / consumer backlash', folder:'comms', labels:['crisis'], severity:'High',
    prompt:'Coordinated or viral calls to boycott the brand, organized backlash campaigns, or sustained negative sentiment that threatens commercial outcomes.',
-   surf:['B','T'], date:'Apr 22, 2026'},
+   surf:['E'], date:'Apr 22, 2026'},
   {id:8, kind:'brand-risk', name:'Geopolitical exposure', folder:'risk', labels:['geopolitics'], severity:'Medium',
    prompt:'Posts linking the brand to politically sensitive regions, sanctioned entities, supply-chain dependencies in contested geographies, or government investigations.',
-   surf:['B','T'], date:'Feb 09, 2026'},
+   surf:['E'], date:'Feb 09, 2026'},
 
   /* ---- Influencer Risk Categories (NL prompts) ---- */
   {id:9,  kind:'influencer-risk', name:'Hate speech history', folder:'vetting', labels:['vetting','high-priority'], severity:'Critical',
@@ -481,7 +479,7 @@ const state = {
   severities:new Set(),
   surfs:new Set(),
 };
-let modalSurface = 'A';
+let modalSurface = 'S';
 let modalSel = new Set();
 let modalDDOpen = false;
 
@@ -734,7 +732,7 @@ function renderKanban(list){
 
 /* ============================== PREVIEW PICKER MODAL ============================== */
 function openModal(){
-  modalSurface='A';
+  modalSurface='S';
   modalDDOpen=false;
   modalSel = new Set(TAGS.filter(t=>t.surf.includes(modalSurface)).map(t=>t.id));
   $('#overlay').classList.add('open');
@@ -747,11 +745,10 @@ function renderModal(){
 
   // explain context per surface
   const ctxTop = {
-    B:`<span>Brand</span> <span class="who">Apple</span> — tags tracked for this brand:`,
-    T:`<span>Topic</span> <span class="who">AI regulation</span> — tags tracked for this topic:`,
-    A:`<span>Smart Alert</span> <span class="who">Brand crisis watch</span> — tags that trigger this alert:`,
-    V:`<span>Vetting</span> <span class="who">@nutritionwithkate</span> — tags to evaluate this influencer against:`,
-    M:`<span>Monitoring list</span> <span class="who">Tech Execs — APAC</span> — tags tracked for every post:`,
+    S:`<span>Simple Alert</span> <span class="who">Competitor mentions</span> — regular tags that trigger this alert:`,
+    E:`<span>Enhanced Alert</span> <span class="who">Brand crisis watch</span> — search categories that trigger this alert:`,
+    V:`<span>Vetting</span> <span class="who">@nutritionwithkate</span> — risk categories to evaluate this influencer against:`,
+    M:`<span>Monitoring list</span> <span class="who">Tech Execs — APAC</span> — risk categories tracked for every post:`,
   }[modalSurface];
 
   // which kinds apply to this surface
@@ -858,9 +855,9 @@ function renderCreate(){
     isBR   ? 'New search category' :
              'New risk category';
   $('#createSub').textContent =
-    isBool ? 'Boolean keyword query — applied to Brands, Topics, and Smart Alerts.' :
-    isBR   ? 'Natural-language prompt evaluated by AI against posts on tracked brands & topics.' :
-             'Natural-language prompt evaluated by AI against influencer profiles & activity for Vetting and Monitoring.';
+    isBool ? 'Boolean keyword query — applied to Simple Alerts.' :
+    isBR   ? 'Natural-language prompt evaluated by AI — applied to Enhanced Alerts.' :
+             'Natural-language prompt evaluated by AI — applied to Influencer Vetting and Monitoring.';
 
   /* definition field */
   const defField = isBool
