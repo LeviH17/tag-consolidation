@@ -333,7 +333,7 @@
   <!-- MAIN -->
   <main class="main">
     <div class="topbar">
-      <h1>Smart Tags &amp; Risk Categories</h1>
+      <h1>Tags</h1>
       <span class="pill">Unified · V1 prototype</span>
       <span class="spacer"></span>
       <div class="av-photo"></div>
@@ -342,11 +342,11 @@
     <div class="content">
       <div class="tabs">
         <div class="tab">Alert Feed</div>
-        <div class="tab active">Smart Tags</div>
+        <div class="tab active">Tags</div>
       </div>
 
       <div class="hint">
-        <span>One library holds <b>three kinds</b> of categories &mdash; pick a kind below to manage that set. Boolean Smart Tags apply to Brands / Topics / Alerts; natural-language Risk Categories apply either to Brands &amp; Topics or to Influencer Vetting &amp; Monitoring.</span>
+        <span>One library holds two families of tags: <b>regular tags</b> (boolean keyword logic) and <b>smart tags</b> (natural-language prompts). Smart tags split by what they evaluate &mdash; post content for Brands &amp; Topics, or influencer profiles for Vetting &amp; Monitoring. Pick a section below to manage that set.</span>
       </div>
 
       <!-- KIND TABS -->
@@ -385,8 +385,8 @@
     <div class="modal-head">
       <div style="display:flex;align-items:flex-start">
         <div>
-          <h3>Reuse categories across surfaces</h3>
-          <p>Every surface pulls from this same library. Each surface only sees the kinds it supports.</p>
+          <h3>Reuse tags across surfaces</h3>
+          <p>Every surface pulls from this same library. Each surface only shows the tag types it supports.</p>
         </div>
         <span class="x" id="modalX">×</span>
       </div>
@@ -396,7 +396,7 @@
     <div class="modal-foot">
       <span class="note" id="modalNote"></span>
       <button class="btn">Cancel</button>
-      <button class="btn primary" id="modalApply">Apply categories</button>
+      <button class="btn primary" id="modalApply">Apply tags</button>
     </div>
   </div>
 </div>
@@ -425,18 +425,18 @@
 <script>
 /* ============================== DATA ============================== */
 const KINDS = [
-  {key:'boolean',         short:'Smart Tags',                long:'Smart Tags',
-   tagline:'Boolean keyword logic',                          icon:'⚡', iconBg:'#16131f',
+  {key:'boolean',         short:'Regular Tags',              long:'Regular Tags',
+   tagline:'Boolean keyword logic — exact terms, operators, wildcards', icon:'⚡', iconBg:'#16131f',
    surfaces:['B','T','A'],
-   newLabel:'+ New smart tag',  emptyLabel:'smart tag'},
-  {key:'brand-risk',      short:'Brand & Topic Risk',        long:'Brand & Topic Risk Categories',
-   tagline:'Natural-language risk applied to brands &amp; topics', icon:'◆', iconBg:'#7c3aed',
+   newLabel:'+ New regular tag',  emptyLabel:'regular tag'},
+  {key:'brand-risk',      short:'Brand & Topic Smart Tags',  long:'Brand & Topic Smart Tags',
+   tagline:'Natural-language prompts applied to brands &amp; topics', icon:'◆', iconBg:'#7c3aed',
    surfaces:['B','T'],
-   newLabel:'+ New risk category', emptyLabel:'risk category'},
-  {key:'influencer-risk', short:'Influencer Risk',           long:'Influencer Risk Categories',
-   tagline:'Natural-language risk applied to influencers',   icon:'◉', iconBg:'#2563eb',
+   newLabel:'+ New smart tag', emptyLabel:'smart tag'},
+  {key:'influencer-risk', short:'Influencer Smart Tags',     long:'Influencer Smart Tags',
+   tagline:'Natural-language prompts applied to influencers',icon:'◉', iconBg:'#2563eb',
    surfaces:['V','M'],
-   newLabel:'+ New risk category', emptyLabel:'risk category'},
+   newLabel:'+ New smart tag', emptyLabel:'smart tag'},
 ];
 const SURFACES = [
   {key:'B', cls:'b', name:'Brands',                short:'Brands'},
@@ -514,6 +514,8 @@ let modalDDOpen = false;
 
 const FOLDER_COLORS = ['#dc2626','#ea580c','#d97706','#16a34a','#0d9488','#2563eb','#6d28d9','#7c3aed','#c026d3','#9aa1ad'];
 const createState = {
+  family:'regular',   // 'regular' | 'smart' — top-level type chooser
+  domain:null,        // 'content' | 'influencer' — only set when family==='smart'
   kind:'boolean', name:'', query:'', prompt:'', severity:'Medium',
   folder:'uncat', labels:[], surfaces:new Set(),
   newFolder:{open:false, name:'', color:'#6d28d9'}, err:'',
@@ -793,11 +795,11 @@ function renderModal(){
 
   // explain context per surface
   const ctxTop = {
-    B:`<span>Brand</span> <span class="who">Apple</span> — categories tracked for this brand:`,
-    T:`<span>Topic</span> <span class="who">AI regulation</span> — categories tracked for this topic:`,
-    A:`<span>Smart Alert</span> <span class="who">Brand crisis watch</span> — categories that trigger this alert:`,
-    V:`<span>Vetting</span> <span class="who">@nutritionwithkate</span> — categories to evaluate this influencer against:`,
-    M:`<span>Monitoring list</span> <span class="who">Tech Execs — APAC</span> — categories tracked for every post:`,
+    B:`<span>Brand</span> <span class="who">Apple</span> — tags tracked for this brand:`,
+    T:`<span>Topic</span> <span class="who">AI regulation</span> — tags tracked for this topic:`,
+    A:`<span>Smart Alert</span> <span class="who">Brand crisis watch</span> — tags that trigger this alert:`,
+    V:`<span>Vetting</span> <span class="who">@nutritionwithkate</span> — tags to evaluate this influencer against:`,
+    M:`<span>Monitoring list</span> <span class="who">Tech Execs — APAC</span> — tags tracked for every post:`,
   }[modalSurface];
 
   // which kinds apply to this surface
@@ -843,7 +845,7 @@ function renderModal(){
         <div class="msel-menu">${menu}</div>
       </div>
     </div>`;
-  $('#modalNote').innerHTML = `<b style="color:var(--ink)">${selectedTags.length}</b> categories selected · pulled live from the shared library`;
+  $('#modalNote').innerHTML = `<b style="color:var(--ink)">${selectedTags.length}</b> tags selected · pulled live from the shared library`;
 
   $('#modalTabs').querySelectorAll('.mtab').forEach(t=>t.onclick=()=>{
     modalSurface=t.dataset.s; modalDDOpen=false;
@@ -872,8 +874,15 @@ document.addEventListener('click', e=>{
 function isInfRisk(k){ return k.key==='influencer-risk'; }
 
 function openCreate(){
-  const k = kindDef(state.kind);
-  createState.kind = state.kind;
+  // prefill family/domain/kind from the active management tab
+  if(state.kind==='boolean'){
+    createState.family='regular'; createState.domain=null; createState.kind='boolean';
+  } else if(state.kind==='brand-risk'){
+    createState.family='smart';   createState.domain='content';    createState.kind='brand-risk';
+  } else {
+    createState.family='smart';   createState.domain='influencer'; createState.kind='influencer-risk';
+  }
+  const k = kindDef(createState.kind);
   createState.name = '';
   createState.query = '';
   createState.prompt = '';
@@ -887,6 +896,27 @@ function openCreate(){
   renderCreate();
   setTimeout(()=>$('#cfName')?.focus(),0);
 }
+
+function setFamily(family){
+  createState.family = family;
+  if(family==='regular'){
+    createState.kind = 'boolean';
+    createState.domain = null;
+  } else {
+    if(!createState.domain) createState.domain = 'content';
+    createState.kind = createState.domain==='content' ? 'brand-risk' : 'influencer-risk';
+  }
+  createState.surfaces = new Set(kindDef(createState.kind).surfaces);
+  createState.err = '';
+  renderCreate();
+}
+function setDomain(domain){
+  createState.domain = domain;
+  createState.kind = domain==='content' ? 'brand-risk' : 'influencer-risk';
+  createState.surfaces = new Set(kindDef(createState.kind).surfaces);
+  createState.err = '';
+  renderCreate();
+}
 function closeCreate(){ $('#createOverlay').classList.remove('open'); }
 
 function suggestedLabels(){
@@ -897,14 +927,15 @@ function renderCreate(focusLab=false){
   const k = kindDef(createState.kind);
   const isBool = k.key==='boolean';
 
+  const isSmart = createState.family==='smart';
   $('#createTitle').textContent =
-    isBool ? 'New smart tag' :
-    k.key==='brand-risk' ? 'New brand & topic risk category' :
-                           'New influencer risk category';
+    !isSmart ? 'New regular tag' :
+    createState.domain==='content' ? 'New smart tag — Brands & Topics' :
+                                     'New smart tag — Influencers';
   $('#createSub').textContent =
-    isBool ? 'Boolean keyword query — applied to Brands, Topics, and Smart Alerts.' :
-    isInfRisk(k) ? 'Natural-language prompt — used to vet & monitor influencers.' :
-                   'Natural-language prompt — applied to Brands and Topics.';
+    !isSmart ? 'Boolean keyword query — applied to Brands, Topics, and Smart Alerts.' :
+    createState.domain==='content' ? 'Natural-language prompt evaluated by AI against posts on tracked brands & topics.' :
+                                     'Natural-language prompt evaluated by AI against influencer profiles & activity for Vetting and Monitoring.';
 
   /* definition field */
   const defField = isBool
@@ -918,7 +949,7 @@ function renderCreate(focusLab=false){
         <textarea class="textarea" id="cfPrompt" rows="3" placeholder='${isInfRisk(k)
             ? "e.g. Influencer has shared content containing hate speech, slurs, or discriminatory views toward protected groups."
             : "e.g. Posts that accuse the brand of making unsubstantiated or deceptive marketing claims, including allegations of false advertising."}'>${esc(createState.prompt)}</textarea>
-        <div class="help">Plain English. The LLM uses this as the test for whether ${isInfRisk(k)?'an influencer profile/activity':'a post'} matches this category.</div>
+        <div class="help">Plain English. The LLM uses this as the test for whether ${isInfRisk(k)?'an influencer profile/activity':'a post'} matches this smart tag.</div>
        </div>`;
 
   /* severity (risk only) */
@@ -945,7 +976,7 @@ function renderCreate(focusLab=false){
         <button class="btn primary" id="cfNewFolderOk">Add folder</button>
         <button class="btn" id="cfNewFolderCancel">Cancel</button>
       </div>` : ''}
-      <div class="help">Folders are shared across all three kinds — group by use case (e.g. Risk Management, Brand Marketing).</div>
+      <div class="help">Folders are shared across regular and smart tags — group by use case (e.g. Risk Management, Brand Marketing).</div>
     </div>`;
 
   /* labels */
@@ -957,7 +988,7 @@ function renderCreate(focusLab=false){
         <input id="labInput" placeholder="${createState.labels.length?'Add another…':'Type a label and press Enter…'}" />
       </div>
       ${sugg.length?`<div class="labsugg"><span class="sg-h">Existing:</span>${sugg.map(l=>`<span class="sg" data-ladd="${esc(l)}">#${esc(l)}</span>`).join('')}</div>`:''}
-      <div class="help">Cross-cutting tags shared across all kinds — useful for grouping by theme (crisis, legal, exec, q2-launch…). Press Enter or comma to add a new one.</div>
+      <div class="help">Shared across all tags — useful for grouping by theme (crisis, legal, exec, q2-launch…). Press Enter or comma to add a new one.</div>
     </div>`;
 
   /* surfaces */
@@ -972,10 +1003,42 @@ function renderCreate(focusLab=false){
           </div>`;
         }).join('')}
       </div>
-      <div class="help">Where this ${isBool?'tag':'category'} appears. You can enable later from the picker.</div>
+      <div class="help">Where this ${isBool?'regular tag':'smart tag'} appears. You can change later from the picker.</div>
     </div>`;
 
+  /* ---- Type chooser (always shown at the top of the form) ---- */
+  const typeChooser = `<div class="form-row">
+    <label class="lab">Tag type<span class="req">*</span></label>
+    <div class="sufgrid">
+      <div class="sufcard ${createState.family==='regular'?'on':''}" data-family="regular">
+        <span class="sd on" style="background:#16131f">⚡</span>
+        <div class="sf-meta"><b>Regular tag</b><span>Boolean keyword logic &mdash; exact terms, operators, wildcards</span></div>
+      </div>
+      <div class="sufcard ${createState.family==='smart'?'on':''}" data-family="smart">
+        <span class="sd on" style="background:#7c3aed">✦</span>
+        <div class="sf-meta"><b>Smart tag</b><span>Natural-language prompt &mdash; AI evaluates whether content matches</span></div>
+      </div>
+    </div>
+  </div>`;
+
+  /* ---- Domain chooser (smart only — content vs influencer) ---- */
+  const domainChooser = isSmart ? `<div class="form-row">
+    <label class="lab">Apply this smart tag to<span class="req">*</span></label>
+    <div class="sufgrid">
+      <div class="sufcard ${createState.domain==='content'?'on':''}" data-domain="content">
+        <span class="sd on" style="background:#7c3aed">◆</span>
+        <div class="sf-meta"><b>Brands &amp; Topics</b><span>Evaluate posts on tracked brands and topics</span></div>
+      </div>
+      <div class="sufcard ${createState.domain==='influencer'?'on':''}" data-domain="influencer">
+        <span class="sd on" style="background:#2563eb">◉</span>
+        <div class="sf-meta"><b>Influencers</b><span>Evaluate influencer profiles for vetting and monitoring</span></div>
+      </div>
+    </div>
+  </div>` : '';
+
   $('#createBody').innerHTML = `
+    ${typeChooser}
+    ${domainChooser}
     <div class="form-row">
       <label class="lab">Name<span class="req">*</span></label>
       <input class="input" id="cfName" placeholder="e.g. ${isBool?'Silicon shield':(isInfRisk(k)?'Active controversy / scandal':'Product safety concerns')}" value="${esc(createState.name)}"/>
@@ -994,6 +1057,8 @@ function renderCreate(focusLab=false){
   const pEl    = $('#cfPrompt');if(pEl)    pEl.oninput    = e=>{createState.prompt=e.target.value;};
 
   /* structural bindings */
+  $('#createBody').querySelectorAll('[data-family]').forEach(b=>b.onclick=()=>setFamily(b.dataset.family));
+  $('#createBody').querySelectorAll('[data-domain]').forEach(b=>b.onclick=()=>setDomain(b.dataset.domain));
   $('#createBody').querySelectorAll('[data-sev]').forEach(b=>b.onclick=()=>{createState.severity=b.dataset.sev; renderCreate();});
   $('#createBody').querySelectorAll('[data-folder]').forEach(b=>b.onclick=()=>{
     const fid=b.dataset.folder;
