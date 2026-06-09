@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Smart Tags & Risk Categories — V1 Prototype (Pendulum)</title>
+<title>Tags — V1 Prototype (Pendulum)</title>
 <style>
   :root{
     --bg:#ffffff; --panel:#ffffff; --line:#e6e7eb; --line-soft:#f0f1f4;
@@ -468,7 +468,7 @@ let TAGS = [
    query:'(CEO OR "chief executive") NEAR/10 (controversy OR scandal OR statement)',
    surf:['B','A'], date:'Feb 14, 2026'},
 
-  /* ---- Brand & Topic Risk Categories (NL) ---- */
+  /* ---- Brand & Topic Smart Tags (NL prompts) ---- */
   {id:5, kind:'brand-risk', name:'Misleading marketing claims', folder:'risk', labels:['legal','compliance'], severity:'High',
    prompt:'Posts that accuse the brand of making unsubstantiated, exaggerated, or deceptive marketing claims — including allegations of false advertising or greenwashing.',
    surf:['B','T'], date:'Mar 18, 2026'},
@@ -482,7 +482,7 @@ let TAGS = [
    prompt:'Posts linking the brand to politically sensitive regions, sanctioned entities, supply-chain dependencies in contested geographies, or government investigations.',
    surf:['B','T'], date:'Feb 09, 2026'},
 
-  /* ---- Influencer Risk Categories (NL) ---- */
+  /* ---- Influencer Smart Tags (NL prompts) ---- */
   {id:9,  kind:'influencer-risk', name:'Hate speech history', folder:'vetting', labels:['vetting','high-priority'], severity:'Critical',
    prompt:'Influencer has previously posted, shared, or endorsed content containing hate speech, slurs, or discriminatory views toward protected groups.',
    surf:['V','M'], date:'Apr 02, 2026'},
@@ -812,7 +812,7 @@ function renderModal(){
         const k=kindDef(t.kind);
         return `<span class="mchip"><span class="mc-dot" style="background:${k.iconBg}"></span>${esc(t.name)}<span class="mc-rm" data-rm="${t.id}" title="Remove">×</span></span>`;
       }).join('')
-    : `<span class="msel-ph">Select categories…</span>`;
+    : `<span class="msel-ph">Select tags…</span>`;
 
   // dropdown menu grouped by KIND then folder
   const menu = allowedKinds.map(kk=>{
