@@ -366,7 +366,7 @@
         <span class="spacer" style="flex:1"></span>
         <button class="btn ghost" id="pickerBtn">⤢ Preview picker</button>
         <button class="btn" id="newFolderBtn">+ New folder</button>
-        <button class="btn primary" id="newTagBtn">+ New</button>
+        <button class="btn primary" id="newTagBtn">+ Create tag</button>
       </div>
 
       <!-- FILTERS -->
@@ -599,8 +599,6 @@ function renderKindBar(){
     state.search=''; $('#search').value='';
     render();
   });
-  // also update the "+ New" button label
-  $('#newTagBtn').textContent = kindDef(state.kind).newLabel;
 }
 
 /* ============================== FILTERS ============================== */
