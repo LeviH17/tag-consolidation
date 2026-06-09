@@ -123,9 +123,6 @@
   .pprev::before{content:"\201C";color:var(--ink-3);margin-right:2px}
   .pprev::after{content:"\201D";color:var(--ink-3);margin-left:2px}
 
-  .lbls{display:inline-flex;gap:5px;flex-wrap:wrap}
-  .lbl{font-size:11px;font-weight:550;background:#f2f3f5;color:#5b606b;border-radius:6px;padding:2px 7px}
-
   /* surface pills */
   .surf{display:inline-flex;gap:5px;align-items:center}
   .sd{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:800;
@@ -277,19 +274,6 @@
   .swatches{display:inline-flex;gap:5px}
   .sw{width:20px;height:20px;border-radius:6px;cursor:pointer;border:1px solid rgba(0,0,0,.06)}
   .sw.sel{outline:2px solid var(--ink);outline-offset:1px}
-  .labinput{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;
-    background:#fff;align-items:center;cursor:text}
-  .labinput:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  .labinput input{border:0;outline:none;font:inherit;flex:1;min-width:120px;padding:4px;background:transparent}
-  .labchip{display:inline-flex;align-items:center;gap:6px;background:#f1f2f5;border-radius:6px;padding:3px 5px 3px 9px;
-    font-size:12px;font-weight:600;color:#42454d}
-  .labchip .x{cursor:pointer;font-size:13px;line-height:1;color:var(--ink-3);width:14px;text-align:center}
-  .labchip .x:hover{color:var(--ink)}
-  .labsugg{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center}
-  .labsugg .sg-h{font-size:11px;color:var(--ink-3);font-weight:600;margin-right:4px}
-  .labsugg .sg{font-size:11.5px;font-weight:550;background:#fff;border:1px solid var(--line);border-radius:999px;
-    padding:3px 9px;cursor:pointer;color:#5b606b}
-  .labsugg .sg:hover{border-color:var(--accent);color:var(--accent)}
   .err{color:#a31d44;font-size:12.5px;font-weight:600}
 
   /* ---------- Modal ---------- */
@@ -496,7 +480,6 @@ let TAGS = [
    prompt:'Signs of bot followers, engagement pods, purchased reach, or other inauthentic audience behavior that inflates apparent influence metrics.',
    surf:['V'], date:'Apr 11, 2026'},
 ];
-const ALL_LABELS = ()=>[...new Set(TAGS.filter(t=>t.kind===state.kind).flatMap(t=>t.labels))].sort();
 
 /* ============================== STATE ============================== */
 const state = {
@@ -505,7 +488,6 @@ const state = {
   search:'',
   folder:'all',
   severities:new Set(),
-  labels:new Set(),
   surfs:new Set(),
 };
 let modalSurface = 'A';
@@ -517,7 +499,7 @@ const createState = {
   family:'regular',   // 'regular' | 'smart' — top-level type chooser
   domain:null,        // 'content' | 'influencer' — only set when family==='smart'
   kind:'boolean', name:'', query:'', prompt:'', severity:'Medium',
-  folder:'uncat', labels:[], surfaces:new Set(),
+  folder:'uncat', surfaces:new Set(),
   newFolder:{open:false, name:'', color:'#6d28d9'}, err:'',
 };
 
@@ -532,7 +514,6 @@ function matches(t){
   if(t.kind!==state.kind) return false;
   if(state.search && !t.name.toLowerCase().includes(state.search.toLowerCase())) return false;
   if(state.severities.size && (!t.severity || !state.severities.has(t.severity))) return false;
-  if(state.labels.size && !t.labels.some(l=>state.labels.has(l))) return false;
   if(state.surfs.size && !t.surf.some(s=>state.surfs.has(s))) return false;
   return true;
 }
@@ -543,7 +524,6 @@ function sevBadge(s){
   const cls = s==='Critical'?'crit':s==='High'?'high':s==='Medium'?'med':'low';
   return `<span class="sev ${cls}">${s}</span>`;
 }
-function labelChipsHTML(ls){return ls.length? `<span class="lbls">${ls.map(l=>`<span class="lbl">#${esc(l)}</span>`).join('')}</span>` : '<span style="color:#c4c8d0">—</span>';}
 function surfDots(surf,kindKey){
   const allowed = kindDef(kindKey).surfaces;
   return `<span class="surf">`+allowed.map(k=>{
@@ -595,7 +575,7 @@ function renderKindBar(){
   $('#kindbar').querySelectorAll('.kbtn').forEach(b=>b.onclick=()=>{
     state.kind=b.dataset.k;
     state.folder='all';
-    state.severities.clear(); state.labels.clear(); state.surfs.clear();
+    state.severities.clear(); state.surfs.clear();
     state.search=''; $('#search').value='';
     render();
   });
@@ -613,16 +593,10 @@ function renderFilters(){
     const s=surfaceDef(skey); const on=state.surfs.has(skey);
     return `<span class="chip ${on?'on':''}" data-f="surf" data-v="${skey}"><span class="sd ${s.cls} on" style="width:14px;height:14px;font-size:8px">${skey}</span>${s.short}</span>`;
   }).join('');
-  const labels = ALL_LABELS();
-  const labelChips = labels.map(l=>{
-    const on=state.labels.has(l);
-    return `<span class="chip ${on?'on':''}" data-f="label" data-v="${l}">#${esc(l)}</span>`;
-  }).join('');
-  const any = state.severities.size||state.labels.size||state.surfs.size||state.search;
+  const any = state.severities.size||state.surfs.size||state.search;
   $('#filters').innerHTML =
     (showSev?`<span class="flabel">Severity</span>${sevChips}<span class="vsep"></span>`:'')+
     `<span class="flabel">Applied to</span>${surfChips}`+
-    (labels.length?`<span class="vsep"></span><span class="flabel">Labels</span>${labelChips}`:'')+
     (any?`<span class="vsep"></span><span class="chip" data-f="clear" style="color:#a31d44;border-color:#f3c6d1">✕ Clear</span>`:'');
 }
 
@@ -651,9 +625,9 @@ function renderTree(list){
   const rows = list.filter(t=>state.folder==='all'||t.folder===state.folder);
   const isBool = state.kind==='boolean';
   const head = isBool
-    ? `<tr><th>Name ↓</th><th>Folder</th><th>Boolean query</th><th>Labels</th><th>Applied to</th><th>Created</th><th>Date</th><th style="text-align:right">Actions</th></tr>`
-    : `<tr><th>Name ↓</th><th>Folder</th><th>Prompt</th><th>Severity</th><th>Labels</th><th>Applied to</th><th>Created</th><th>Date</th><th style="text-align:right">Actions</th></tr>`;
-  const colspan = isBool?8:9;
+    ? `<tr><th>Name ↓</th><th>Folder</th><th>Boolean query</th><th>Applied to</th><th>Created</th><th>Date</th><th style="text-align:right">Actions</th></tr>`
+    : `<tr><th>Name ↓</th><th>Folder</th><th>Prompt</th><th>Severity</th><th>Applied to</th><th>Created</th><th>Date</th><th style="text-align:right">Actions</th></tr>`;
+  const colspan = isBool?7:8;
 
   const body = rows.length? rows.map(t=>{
     const acts = `<div class="acts">
@@ -665,7 +639,6 @@ function renderTree(list){
         <td><div class="tname"><span class="grip">${ic('grip')}</span>${esc(t.name)}</div></td>
         <td>${folderPill(t.folder)}</td>
         <td>${queryPreview(t.query)}</td>
-        <td>${labelChipsHTML(t.labels)}</td>
         <td>${surfDots(t.surf,t.kind)}</td>
         <td><div class="by"><span class="avatar">LH</span>Levi Howard</div></td>
         <td style="color:var(--ink-2);white-space:nowrap">${t.date}</td>
@@ -677,7 +650,6 @@ function renderTree(list){
       <td>${folderPill(t.folder)}</td>
       <td>${promptPreview(t.prompt)}</td>
       <td>${sevBadge(t.severity)}</td>
-      <td>${labelChipsHTML(t.labels)}</td>
       <td>${surfDots(t.surf,t.kind)}</td>
       <td><div class="by"><span class="avatar">LH</span>Levi Howard</div></td>
       <td style="color:var(--ink-2);white-space:nowrap">${t.date}</td>
@@ -726,7 +698,6 @@ function renderSections(list){
           <span class="tname">${esc(t.name)}</span>
           <span class="mid">${t.kind==='boolean'?queryPreview(t.query):promptPreview(t.prompt)}</span>
           ${t.kind!=='boolean'?sevBadge(t.severity):''}
-          ${labelChipsHTML(t.labels)}
           <span style="display:flex;align-items:center;gap:7px;color:var(--ink-3);font-size:12px">${surfDots(t.surf,t.kind)}</span>
           <div class="acts">
             <button class="iconbtn" title="Edit">${ic('edit')}</button>
@@ -755,7 +726,7 @@ function renderKanban(list){
         <div class="ct"><span class="grip">${ic('grip')}</span>${esc(t.name)}</div>
         <div>${t.kind==='boolean'?queryPreview(t.query):promptPreview(t.prompt)}</div>
         <div class="crow">
-          <span style="display:flex;gap:6px;align-items:center">${t.kind!=='boolean'?sevBadge(t.severity):''}${labelChipsHTML(t.labels)}</span>
+          <span style="display:flex;gap:6px;align-items:center">${t.kind!=='boolean'?sevBadge(t.severity):''}</span>
           ${surfDots(t.surf,t.kind)}
         </div>
       </div>`).join('')}
@@ -827,7 +798,6 @@ function renderModal(){
               <span class="cbx">${sel?ic('check'):''}</span>
               <span class="on-name">${esc(t.name)}</span>
               ${t.kind!=='boolean'?sevBadge(t.severity):''}
-              ${labelChipsHTML(t.labels)}
             </div>`;
           }).join('')}`).join('');
   }).join('');
@@ -886,7 +856,6 @@ function openCreate(){
   createState.prompt = '';
   createState.severity = 'Medium';
   createState.folder = (state.folder && state.folder!=='all') ? state.folder : 'uncat';
-  createState.labels = [];
   createState.surfaces = new Set(k.surfaces);    // default all surfaces enabled
   createState.newFolder = {open:false, name:'', color:FOLDER_COLORS[6]};
   createState.err = '';
@@ -917,11 +886,7 @@ function setDomain(domain){
 }
 function closeCreate(){ $('#createOverlay').classList.remove('open'); }
 
-function suggestedLabels(){
-  return [...new Set(TAGS.flatMap(t=>t.labels))].filter(l=>!createState.labels.includes(l)).sort();
-}
-
-function renderCreate(focusLab=false){
+function renderCreate(){
   const k = kindDef(createState.kind);
   const isBool = k.key==='boolean';
 
@@ -975,18 +940,6 @@ function renderCreate(focusLab=false){
         <button class="btn" id="cfNewFolderCancel">Cancel</button>
       </div>` : ''}
       <div class="help">Folders are shared across regular tags and risk categories — group by use case (e.g. Risk Management, Brand Marketing).</div>
-    </div>`;
-
-  /* labels */
-  const sugg = suggestedLabels();
-  const labelsField = `<div class="form-row">
-      <label class="lab">Labels</label>
-      <div class="labinput" id="labWrap">
-        ${createState.labels.map(l=>`<span class="labchip">#${esc(l)}<span class="x" data-lrm="${esc(l)}">×</span></span>`).join('')}
-        <input id="labInput" placeholder="${createState.labels.length?'Add another…':'Type a label and press Enter…'}" />
-      </div>
-      ${sugg.length?`<div class="labsugg"><span class="sg-h">Existing:</span>${sugg.map(l=>`<span class="sg" data-ladd="${esc(l)}">#${esc(l)}</span>`).join('')}</div>`:''}
-      <div class="help">Shared across all tags — useful for grouping by theme (crisis, legal, exec, q2-launch…). Press Enter or comma to add a new one.</div>
     </div>`;
 
   /* surfaces */
@@ -1044,7 +997,6 @@ function renderCreate(focusLab=false){
     ${defField}
     ${sevField}
     ${folderField}
-    ${labelsField}
     ${surfField}
   `;
   $('#createErr').textContent = createState.err || '';
@@ -1083,33 +1035,6 @@ function renderCreate(focusLab=false){
     renderCreate();
   });
 
-  $('#createBody').querySelectorAll('[data-lrm]').forEach(x=>x.onclick=()=>{
-    createState.labels = createState.labels.filter(l=>l!==x.dataset.lrm);
-    renderCreate(true);
-  });
-  $('#createBody').querySelectorAll('[data-ladd]').forEach(s=>s.onclick=()=>{
-    const v=s.dataset.ladd;
-    if(!createState.labels.includes(v)) createState.labels.push(v);
-    renderCreate(true);
-  });
-  const labEl=$('#labInput');
-  if(labEl){
-    labEl.onkeydown = e=>{
-      if(e.key==='Enter' || e.key===','){
-        e.preventDefault();
-        const v = labEl.value.trim().replace(/^#/,'').toLowerCase().replace(/\s+/g,'-');
-        if(v && !createState.labels.includes(v)){
-          createState.labels.push(v);
-          renderCreate(true);
-        } else { labEl.value=''; }
-      } else if(e.key==='Backspace' && labEl.value==='' && createState.labels.length){
-        createState.labels.pop();
-        renderCreate(true);
-      }
-    };
-    const wrap=$('#labWrap'); if(wrap) wrap.onclick = e=>{ if(e.target.id==='labWrap') labEl.focus(); };
-    if(focusLab) setTimeout(()=>$('#labInput')?.focus(),0);
-  }
 }
 
 function submitCreate(){
@@ -1124,7 +1049,7 @@ function submitCreate(){
   const today = new Date().toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'});
   const tag = {
     id:newId, kind:k.key, name:createState.name.trim(),
-    folder:createState.folder, labels:[...createState.labels],
+    folder:createState.folder,
     surf:[...createState.surfaces], date:today,
   };
   if(isBool) tag.query = createState.query.trim();
@@ -1144,8 +1069,8 @@ $('#search').oninput=e=>{state.search=e.target.value;render();};
 $('#filters').onclick=e=>{
   const c=e.target.closest('.chip'); if(!c)return;
   const f=c.dataset.f,v=c.dataset.v;
-  if(f==='clear'){state.severities.clear();state.labels.clear();state.surfs.clear();state.search='';$('#search').value='';render();return;}
-  const set = f==='sev'?state.severities : f==='label'?state.labels : state.surfs;
+  if(f==='clear'){state.severities.clear();state.surfs.clear();state.search='';$('#search').value='';render();return;}
+  const set = f==='sev'?state.severities : state.surfs;
   set.has(v)?set.delete(v):set.add(v);
   render();
 };
