@@ -346,7 +346,7 @@
       </div>
 
       <div class="hint">
-        <span>One library holds two families of tags: <b>regular tags</b> (boolean keyword logic) and <b>smart tags</b> (natural-language prompts). Smart tags split by what they evaluate &mdash; post content for Brands &amp; Topics, or influencer profiles for Vetting &amp; Monitoring. Pick a section below to manage that set.</span>
+        <span>One library holds two families of tags: <b>regular tags</b> (boolean keyword logic) and <b>risk categories</b> (natural-language prompts). Risk categories split by what they evaluate &mdash; post content for Brands &amp; Topics, or influencer profiles for Vetting &amp; Monitoring. Pick a section below to manage that set.</span>
       </div>
 
       <!-- KIND TABS -->
@@ -429,14 +429,14 @@ const KINDS = [
    tagline:'Boolean keyword logic — exact terms, operators, wildcards', icon:'⚡', iconBg:'#16131f',
    surfaces:['B','T','A'],
    newLabel:'+ New regular tag',  emptyLabel:'regular tag'},
-  {key:'brand-risk',      short:'Brand & Topic Smart Tags',  long:'Brand & Topic Smart Tags',
+  {key:'brand-risk',      short:'Brand & Topic Risk Categories',  long:'Brand & Topic Risk Categories',
    tagline:'Natural-language prompts applied to brands &amp; topics', icon:'◆', iconBg:'#7c3aed',
    surfaces:['B','T'],
-   newLabel:'+ New smart tag', emptyLabel:'smart tag'},
-  {key:'influencer-risk', short:'Influencer Smart Tags',     long:'Influencer Smart Tags',
+   newLabel:'+ New risk category', emptyLabel:'risk category'},
+  {key:'influencer-risk', short:'Influencer Risk Categories',     long:'Influencer Risk Categories',
    tagline:'Natural-language prompts applied to influencers',icon:'◉', iconBg:'#2563eb',
    surfaces:['V','M'],
-   newLabel:'+ New smart tag', emptyLabel:'smart tag'},
+   newLabel:'+ New risk category', emptyLabel:'risk category'},
 ];
 const SURFACES = [
   {key:'B', cls:'b', name:'Brands',                short:'Brands'},
@@ -454,7 +454,7 @@ const FOLDERS = [
   {id:'uncat',     name:'Uncategorized',       color:'#9ca3af'},
 ];
 let TAGS = [
-  /* ---- Boolean Smart Tags ---- */
+  /* ---- Regular Tags (boolean) ---- */
   {id:1, kind:'boolean', name:'Silicon shield', folder:'marketing', labels:['geopolitics'],
    query:'("silicon shield" OR "Taiwan chip*") AND (TSMC OR semiconductor*) NOT job*',
    surf:['B','T','A'], date:'Aug 22, 2025'},
@@ -468,7 +468,7 @@ let TAGS = [
    query:'(CEO OR "chief executive") NEAR/10 (controversy OR scandal OR statement)',
    surf:['B','A'], date:'Feb 14, 2026'},
 
-  /* ---- Brand & Topic Smart Tags (NL prompts) ---- */
+  /* ---- Brand & Topic Risk Categories (NL prompts) ---- */
   {id:5, kind:'brand-risk', name:'Misleading marketing claims', folder:'risk', labels:['legal','compliance'], severity:'High',
    prompt:'Posts that accuse the brand of making unsubstantiated, exaggerated, or deceptive marketing claims — including allegations of false advertising or greenwashing.',
    surf:['B','T'], date:'Mar 18, 2026'},
@@ -482,7 +482,7 @@ let TAGS = [
    prompt:'Posts linking the brand to politically sensitive regions, sanctioned entities, supply-chain dependencies in contested geographies, or government investigations.',
    surf:['B','T'], date:'Feb 09, 2026'},
 
-  /* ---- Influencer Smart Tags (NL prompts) ---- */
+  /* ---- Influencer Risk Categories (NL prompts) ---- */
   {id:9,  kind:'influencer-risk', name:'Hate speech history', folder:'vetting', labels:['vetting','high-priority'], severity:'Critical',
    prompt:'Influencer has previously posted, shared, or endorsed content containing hate speech, slurs, or discriminatory views toward protected groups.',
    surf:['V','M'], date:'Apr 02, 2026'},
@@ -930,8 +930,8 @@ function renderCreate(focusLab=false){
   const isSmart = createState.family==='smart';
   $('#createTitle').textContent =
     !isSmart ? 'New regular tag' :
-    createState.domain==='content' ? 'New smart tag — Brands & Topics' :
-                                     'New smart tag — Influencers';
+    createState.domain==='content' ? 'New risk category — Brands & Topics' :
+                                     'New risk category — Influencers';
   $('#createSub').textContent =
     !isSmart ? 'Boolean keyword query — applied to Brands, Topics, and Smart Alerts.' :
     createState.domain==='content' ? 'Natural-language prompt evaluated by AI against posts on tracked brands & topics.' :
@@ -949,7 +949,7 @@ function renderCreate(focusLab=false){
         <textarea class="textarea" id="cfPrompt" rows="3" placeholder='${isInfRisk(k)
             ? "e.g. Influencer has shared content containing hate speech, slurs, or discriminatory views toward protected groups."
             : "e.g. Posts that accuse the brand of making unsubstantiated or deceptive marketing claims, including allegations of false advertising."}'>${esc(createState.prompt)}</textarea>
-        <div class="help">Plain English. The LLM uses this as the test for whether ${isInfRisk(k)?'an influencer profile/activity':'a post'} matches this smart tag.</div>
+        <div class="help">Plain English. The LLM uses this as the test for whether ${isInfRisk(k)?'an influencer profile/activity':'a post'} matches this risk category.</div>
        </div>`;
 
   /* severity (risk only) */
@@ -976,7 +976,7 @@ function renderCreate(focusLab=false){
         <button class="btn primary" id="cfNewFolderOk">Add folder</button>
         <button class="btn" id="cfNewFolderCancel">Cancel</button>
       </div>` : ''}
-      <div class="help">Folders are shared across regular and smart tags — group by use case (e.g. Risk Management, Brand Marketing).</div>
+      <div class="help">Folders are shared across regular tags and risk categories — group by use case (e.g. Risk Management, Brand Marketing).</div>
     </div>`;
 
   /* labels */
@@ -1003,7 +1003,7 @@ function renderCreate(focusLab=false){
           </div>`;
         }).join('')}
       </div>
-      <div class="help">Where this ${isBool?'regular tag':'smart tag'} appears. You can change later from the picker.</div>
+      <div class="help">Where this ${isBool?'regular tag':'risk category'} appears. You can change later from the picker.</div>
     </div>`;
 
   /* ---- Type chooser (always shown at the top of the form) ---- */
@@ -1016,14 +1016,14 @@ function renderCreate(focusLab=false){
       </div>
       <div class="sufcard ${createState.family==='smart'?'on':''}" data-family="smart">
         <span class="sd on" style="background:#7c3aed">✦</span>
-        <div class="sf-meta"><b>Smart tag</b><span>Natural-language prompt &mdash; AI evaluates whether content matches</span></div>
+        <div class="sf-meta"><b>Risk Category</b><span>Natural-language prompt &mdash; AI evaluates whether content matches</span></div>
       </div>
     </div>
   </div>`;
 
   /* ---- Domain chooser (smart only — content vs influencer) ---- */
   const domainChooser = isSmart ? `<div class="form-row">
-    <label class="lab">Apply this smart tag to<span class="req">*</span></label>
+    <label class="lab">Apply this risk category to<span class="req">*</span></label>
     <div class="sufgrid">
       <div class="sufcard ${createState.domain==='content'?'on':''}" data-domain="content">
         <span class="sd on" style="background:#7c3aed">◆</span>
