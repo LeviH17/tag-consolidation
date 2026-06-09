@@ -330,7 +330,7 @@
       </div>
 
       <div class="hint">
-        <span>One library holds two families of tags: <b>regular tags</b> (boolean keyword logic) and <b>risk categories</b> (natural-language prompts). Risk categories split by what they evaluate &mdash; post content for Brands &amp; Topics, or influencer profiles for Vetting &amp; Monitoring. Pick a section below to manage that set.</span>
+        <span>One library, three kinds of tags: <b>regular tags</b> (boolean keyword logic), <b>search categories</b> (natural-language prompts for brands &amp; topics), and <b>risk categories</b> (natural-language prompts for influencers). Pick a section below to manage that set.</span>
       </div>
 
       <!-- KIND TABS -->
@@ -413,10 +413,10 @@ const KINDS = [
    tagline:'Boolean keyword logic — exact terms, operators, wildcards', icon:'⚡', iconBg:'#16131f',
    surfaces:['B','T','A'],
    newLabel:'+ New regular tag',  emptyLabel:'regular tag'},
-  {key:'brand-risk',      short:'Brand & Topic Risk Categories',  long:'Brand & Topic Risk Categories',
+  {key:'brand-risk',      short:'Search Categories',  long:'Search Categories',
    tagline:'Natural-language prompts applied to brands &amp; topics', icon:'◆', iconBg:'#7c3aed',
    surfaces:['B','T'],
-   newLabel:'+ New risk category', emptyLabel:'risk category'},
+   newLabel:'+ New search category', emptyLabel:'search category'},
   {key:'influencer-risk', short:'Influencer Risk Categories',     long:'Influencer Risk Categories',
    tagline:'Natural-language prompts applied to influencers',icon:'◉', iconBg:'#2563eb',
    surfaces:['V','M'],
@@ -452,7 +452,7 @@ let TAGS = [
    query:'(CEO OR "chief executive") NEAR/10 (controversy OR scandal OR statement)',
    surf:['B','A'], date:'Feb 14, 2026'},
 
-  /* ---- Brand & Topic Risk Categories (NL prompts) ---- */
+  /* ---- Search Categories (NL prompts for brands & topics) ---- */
   {id:5, kind:'brand-risk', name:'Misleading marketing claims', folder:'risk', labels:['legal','compliance'], severity:'High',
    prompt:'Posts that accuse the brand of making unsubstantiated, exaggerated, or deceptive marketing claims — including allegations of false advertising or greenwashing.',
    surf:['B','T'], date:'Mar 18, 2026'},
@@ -496,8 +496,6 @@ let modalDDOpen = false;
 
 const FOLDER_COLORS = ['#dc2626','#ea580c','#d97706','#16a34a','#0d9488','#2563eb','#6d28d9','#7c3aed','#c026d3','#9aa1ad'];
 const createState = {
-  family:'regular',   // 'regular' | 'smart' — top-level type chooser
-  domain:null,        // 'content' | 'influencer' — only set when family==='smart'
   kind:'boolean', name:'', query:'', prompt:'', severity:'Medium',
   folder:'uncat', surfaces:new Set(),
   newFolder:{open:false, name:'', color:'#6d28d9'}, err:'',
@@ -842,14 +840,7 @@ document.addEventListener('click', e=>{
 function isInfRisk(k){ return k.key==='influencer-risk'; }
 
 function openCreate(){
-  // prefill family/domain/kind from the active management tab
-  if(state.kind==='boolean'){
-    createState.family='regular'; createState.domain=null; createState.kind='boolean';
-  } else if(state.kind==='brand-risk'){
-    createState.family='smart';   createState.domain='content';    createState.kind='brand-risk';
-  } else {
-    createState.family='smart';   createState.domain='influencer'; createState.kind='influencer-risk';
-  }
+  createState.kind = state.kind;                 // prefill from the active management tab
   const k = kindDef(createState.kind);
   createState.name = '';
   createState.query = '';
@@ -864,23 +855,9 @@ function openCreate(){
   setTimeout(()=>$('#cfName')?.focus(),0);
 }
 
-function setFamily(family){
-  createState.family = family;
-  if(family==='regular'){
-    createState.kind = 'boolean';
-    createState.domain = null;
-  } else {
-    if(!createState.domain) createState.domain = 'content';
-    createState.kind = createState.domain==='content' ? 'brand-risk' : 'influencer-risk';
-  }
-  createState.surfaces = new Set(kindDef(createState.kind).surfaces);
-  createState.err = '';
-  renderCreate();
-}
-function setDomain(domain){
-  createState.domain = domain;
-  createState.kind = domain==='content' ? 'brand-risk' : 'influencer-risk';
-  createState.surfaces = new Set(kindDef(createState.kind).surfaces);
+function setKind(kind){
+  createState.kind = kind;
+  createState.surfaces = new Set(kindDef(kind).surfaces);
   createState.err = '';
   renderCreate();
 }
@@ -890,15 +867,15 @@ function renderCreate(){
   const k = kindDef(createState.kind);
   const isBool = k.key==='boolean';
 
-  const isSmart = createState.family==='smart';
+  const isBR = k.key==='brand-risk';
   $('#createTitle').textContent =
-    !isSmart ? 'New regular tag' :
-    createState.domain==='content' ? 'New risk category — Brands & Topics' :
-                                     'New risk category — Influencers';
+    isBool ? 'New regular tag' :
+    isBR   ? 'New search category' :
+             'New risk category';
   $('#createSub').textContent =
-    !isSmart ? 'Boolean keyword query — applied to Brands, Topics, and Smart Alerts.' :
-    createState.domain==='content' ? 'Natural-language prompt evaluated by AI against posts on tracked brands & topics.' :
-                                     'Natural-language prompt evaluated by AI against influencer profiles & activity for Vetting and Monitoring.';
+    isBool ? 'Boolean keyword query — applied to Brands, Topics, and Smart Alerts.' :
+    isBR   ? 'Natural-language prompt evaluated by AI against posts on tracked brands & topics.' :
+             'Natural-language prompt evaluated by AI against influencer profiles & activity for Vetting and Monitoring.';
 
   /* definition field */
   const defField = isBool
@@ -912,7 +889,7 @@ function renderCreate(){
         <textarea class="textarea" id="cfPrompt" rows="3" placeholder='${isInfRisk(k)
             ? "e.g. Influencer has shared content containing hate speech, slurs, or discriminatory views toward protected groups."
             : "e.g. Posts that accuse the brand of making unsubstantiated or deceptive marketing claims, including allegations of false advertising."}'>${esc(createState.prompt)}</textarea>
-        <div class="help">Plain English. The LLM uses this as the test for whether ${isInfRisk(k)?'an influencer profile/activity':'a post'} matches this risk category.</div>
+        <div class="help">Plain English. The LLM uses this as the test for whether ${isInfRisk(k)?'an influencer profile/activity':'a post'} matches this ${isBR?'search category':'risk category'}.</div>
        </div>`;
 
   /* severity (risk only) */
@@ -939,7 +916,7 @@ function renderCreate(){
         <button class="btn primary" id="cfNewFolderOk">Add folder</button>
         <button class="btn" id="cfNewFolderCancel">Cancel</button>
       </div>` : ''}
-      <div class="help">Folders are shared across regular tags and risk categories — group by use case (e.g. Risk Management, Brand Marketing).</div>
+      <div class="help">Folders are shared across all tag kinds — group by use case (e.g. Risk Management, Brand Marketing).</div>
     </div>`;
 
   /* surfaces */
@@ -954,42 +931,30 @@ function renderCreate(){
           </div>`;
         }).join('')}
       </div>
-      <div class="help">Where this ${isBool?'regular tag':'risk category'} appears. You can change later from the picker.</div>
+      <div class="help">Where this ${isBool?'regular tag':(isBR?'search category':'risk category')} appears. You can change later from the picker.</div>
     </div>`;
 
-  /* ---- Type chooser (always shown at the top of the form) ---- */
+  /* ---- Type chooser: 3-way (Regular / Search / Risk) ---- */
   const typeChooser = `<div class="form-row">
     <label class="lab">Tag type<span class="req">*</span></label>
     <div class="sufgrid">
-      <div class="sufcard ${createState.family==='regular'?'on':''}" data-family="regular">
+      <div class="sufcard ${createState.kind==='boolean'?'on':''}" data-setkind="boolean">
         <span class="sd on" style="background:#16131f">⚡</span>
         <div class="sf-meta"><b>Regular tag</b><span>Boolean keyword logic &mdash; exact terms, operators, wildcards</span></div>
       </div>
-      <div class="sufcard ${createState.family==='smart'?'on':''}" data-family="smart">
-        <span class="sd on" style="background:#7c3aed">✦</span>
-        <div class="sf-meta"><b>Risk Category</b><span>Natural-language prompt &mdash; AI evaluates whether content matches</span></div>
+      <div class="sufcard ${createState.kind==='brand-risk'?'on':''}" data-setkind="brand-risk">
+        <span class="sd on" style="background:#7c3aed">◆</span>
+        <div class="sf-meta"><b>Search Category</b><span>NL prompt for posts on brands &amp; topics &mdash; AI evaluates matches</span></div>
+      </div>
+      <div class="sufcard ${createState.kind==='influencer-risk'?'on':''}" data-setkind="influencer-risk">
+        <span class="sd on" style="background:#2563eb">◉</span>
+        <div class="sf-meta"><b>Risk Category</b><span>NL prompt for influencer profiles &mdash; AI evaluates risks</span></div>
       </div>
     </div>
   </div>`;
 
-  /* ---- Domain chooser (smart only — content vs influencer) ---- */
-  const domainChooser = isSmart ? `<div class="form-row">
-    <label class="lab">Apply this risk category to<span class="req">*</span></label>
-    <div class="sufgrid">
-      <div class="sufcard ${createState.domain==='content'?'on':''}" data-domain="content">
-        <span class="sd on" style="background:#7c3aed">◆</span>
-        <div class="sf-meta"><b>Brands &amp; Topics</b><span>Evaluate posts on tracked brands and topics</span></div>
-      </div>
-      <div class="sufcard ${createState.domain==='influencer'?'on':''}" data-domain="influencer">
-        <span class="sd on" style="background:#2563eb">◉</span>
-        <div class="sf-meta"><b>Influencers</b><span>Evaluate influencer profiles for vetting and monitoring</span></div>
-      </div>
-    </div>
-  </div>` : '';
-
   $('#createBody').innerHTML = `
     ${typeChooser}
-    ${domainChooser}
     <div class="form-row">
       <label class="lab">Name<span class="req">*</span></label>
       <input class="input" id="cfName" placeholder="e.g. ${isBool?'Silicon shield':(isInfRisk(k)?'Active controversy / scandal':'Product safety concerns')}" value="${esc(createState.name)}"/>
@@ -1007,8 +972,7 @@ function renderCreate(){
   const pEl    = $('#cfPrompt');if(pEl)    pEl.oninput    = e=>{createState.prompt=e.target.value;};
 
   /* structural bindings */
-  $('#createBody').querySelectorAll('[data-family]').forEach(b=>b.onclick=()=>setFamily(b.dataset.family));
-  $('#createBody').querySelectorAll('[data-domain]').forEach(b=>b.onclick=()=>setDomain(b.dataset.domain));
+  $('#createBody').querySelectorAll('[data-setkind]').forEach(b=>b.onclick=()=>setKind(b.dataset.setkind));
   $('#createBody').querySelectorAll('[data-sev]').forEach(b=>b.onclick=()=>{createState.severity=b.dataset.sev; renderCreate();});
   $('#createBody').querySelectorAll('[data-folder]').forEach(b=>b.onclick=()=>{
     const fid=b.dataset.folder;
