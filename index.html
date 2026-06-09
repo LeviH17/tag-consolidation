@@ -235,6 +235,63 @@
   .msel-opt.sel .cbx{background:var(--accent);border-color:var(--accent)}
   .msel-opt .on-name{font-weight:600;flex:1}
 
+  /* ---------- Create form ---------- */
+  .modal.wide{width:min(760px,100%)}
+  .form-row{margin-bottom:16px}
+  .form-row label.lab{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin:0 2px 6px}
+  .form-row .req{color:#a31d44;margin-left:3px}
+  .form-row .help{font-size:12px;color:var(--ink-3);margin-top:5px}
+  .input,.textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;
+    background:#fff;outline:none;color:var(--ink)}
+  .input:focus,.textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .textarea{resize:vertical;min-height:84px;line-height:1.5}
+  .textarea.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:#fafafb}
+  .sevsel{display:inline-flex;gap:6px;flex-wrap:wrap}
+  .sevsel .sopt{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;
+    font-size:12.5px;font-weight:650;color:var(--ink-2)}
+  .sevsel .sopt:hover{border-color:#cfd2d9}
+  .sevsel .sopt.active.crit{background:#fde7ec;color:#a31d44;border-color:#f3c6d1}
+  .sevsel .sopt.active.high{background:#ffedd5;color:#9a3412;border-color:#fbd6a1}
+  .sevsel .sopt.active.med{background:#fef3c7;color:#854d0e;border-color:#fde68a}
+  .sevsel .sopt.active.low{background:#dcfce7;color:#15803d;border-color:#a7f3d0}
+  .sufgrid{display:flex;gap:8px;flex-wrap:wrap}
+  .sufcard{flex:1;min-width:160px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;
+    display:flex;align-items:center;gap:10px;background:#fff}
+  .sufcard:hover{border-color:#cfd2d9}
+  .sufcard.on{border-color:var(--accent);background:#fbf9ff}
+  .sufcard .sd{width:24px;height:24px;font-size:11px}
+  .sufcard .sf-meta{display:flex;flex-direction:column;line-height:1.2}
+  .sufcard .sf-meta b{font-size:13px;color:var(--ink)}
+  .sufcard .sf-meta span{font-size:11px;color:var(--ink-2)}
+  .fsel{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .fopt{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;
+    background:#fff;cursor:pointer;font-size:12.5px;font-weight:550;color:#42454d}
+  .fopt:hover{border-color:#cfd2d9}
+  .fopt.on{border-color:var(--accent);background:#fbf9ff;color:var(--accent)}
+  .fopt .fd{width:9px;height:9px;border-radius:3px}
+  .fopt.new{color:var(--accent);border-style:dashed}
+  .newfolder{margin-top:8px;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px dashed var(--accent);
+    border-radius:10px;background:#fbf9ff;flex-wrap:wrap}
+  .newfolder input{flex:1;min-width:140px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:inherit;
+    background:#fff;outline:none}
+  .swatches{display:inline-flex;gap:5px}
+  .sw{width:20px;height:20px;border-radius:6px;cursor:pointer;border:1px solid rgba(0,0,0,.06)}
+  .sw.sel{outline:2px solid var(--ink);outline-offset:1px}
+  .labinput{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;
+    background:#fff;align-items:center;cursor:text}
+  .labinput:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .labinput input{border:0;outline:none;font:inherit;flex:1;min-width:120px;padding:4px;background:transparent}
+  .labchip{display:inline-flex;align-items:center;gap:6px;background:#f1f2f5;border-radius:6px;padding:3px 5px 3px 9px;
+    font-size:12px;font-weight:600;color:#42454d}
+  .labchip .x{cursor:pointer;font-size:13px;line-height:1;color:var(--ink-3);width:14px;text-align:center}
+  .labchip .x:hover{color:var(--ink)}
+  .labsugg{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center}
+  .labsugg .sg-h{font-size:11px;color:var(--ink-3);font-weight:600;margin-right:4px}
+  .labsugg .sg{font-size:11.5px;font-weight:550;background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:3px 9px;cursor:pointer;color:#5b606b}
+  .labsugg .sg:hover{border-color:var(--accent);color:var(--accent)}
+  .err{color:#a31d44;font-size:12.5px;font-weight:600}
+
   /* ---------- Modal ---------- */
   .overlay{position:fixed;inset:0;background:rgba(16,18,25,.42);display:none;align-items:center;justify-content:center;
     z-index:50;padding:24px}
@@ -344,6 +401,27 @@
   </div>
 </div>
 
+<!-- CREATE MODAL -->
+<div class="overlay" id="createOverlay">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div style="display:flex;align-items:flex-start">
+        <div>
+          <h3 id="createTitle">New</h3>
+          <p id="createSub">…</p>
+        </div>
+        <span class="x" id="createX">×</span>
+      </div>
+    </div>
+    <div class="modal-body" id="createBody"></div>
+    <div class="modal-foot">
+      <span class="note err" id="createErr"></span>
+      <button class="btn" id="createCancel">Cancel</button>
+      <button class="btn primary" id="createSubmit">Create</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ============================== DATA ============================== */
 const KINDS = [
@@ -433,6 +511,13 @@ const state = {
 let modalSurface = 'A';
 let modalSel = new Set();
 let modalDDOpen = false;
+
+const FOLDER_COLORS = ['#dc2626','#ea580c','#d97706','#16a34a','#0d9488','#2563eb','#6d28d9','#7c3aed','#c026d3','#9aa1ad'];
+const createState = {
+  kind:'boolean', name:'', query:'', prompt:'', severity:'Medium',
+  folder:'uncat', labels:[], surfaces:new Set(),
+  newFolder:{open:false, name:'', color:'#6d28d9'}, err:'',
+};
 
 /* ============================== HELPERS ============================== */
 const $ = s=>document.querySelector(s);
@@ -783,6 +868,209 @@ document.addEventListener('click', e=>{
   modalDDOpen=false; renderModal();
 });
 
+/* ============================== CREATE MODAL ============================== */
+function isInfRisk(k){ return k.key==='influencer-risk'; }
+
+function openCreate(){
+  const k = kindDef(state.kind);
+  createState.kind = state.kind;
+  createState.name = '';
+  createState.query = '';
+  createState.prompt = '';
+  createState.severity = 'Medium';
+  createState.folder = (state.folder && state.folder!=='all') ? state.folder : 'uncat';
+  createState.labels = [];
+  createState.surfaces = new Set(k.surfaces);    // default all surfaces enabled
+  createState.newFolder = {open:false, name:'', color:FOLDER_COLORS[6]};
+  createState.err = '';
+  $('#createOverlay').classList.add('open');
+  renderCreate();
+  setTimeout(()=>$('#cfName')?.focus(),0);
+}
+function closeCreate(){ $('#createOverlay').classList.remove('open'); }
+
+function suggestedLabels(){
+  return [...new Set(TAGS.flatMap(t=>t.labels))].filter(l=>!createState.labels.includes(l)).sort();
+}
+
+function renderCreate(focusLab=false){
+  const k = kindDef(createState.kind);
+  const isBool = k.key==='boolean';
+
+  $('#createTitle').textContent =
+    isBool ? 'New smart tag' :
+    k.key==='brand-risk' ? 'New brand & topic risk category' :
+                           'New influencer risk category';
+  $('#createSub').textContent =
+    isBool ? 'Boolean keyword query — applied to Brands, Topics, and Smart Alerts.' :
+    isInfRisk(k) ? 'Natural-language prompt — used to vet & monitor influencers.' :
+                   'Natural-language prompt — applied to Brands and Topics.';
+
+  /* definition field */
+  const defField = isBool
+    ? `<div class="form-row">
+        <label class="lab">Boolean query<span class="req">*</span></label>
+        <textarea class="textarea mono" id="cfQuery" rows="3" placeholder='e.g. (quality OR defect*) NEAR/5 (issue* OR complaint*) NOT job*'>${esc(createState.query)}</textarea>
+        <div class="help">Use AND / OR / NOT / NEAR/n, parentheses, "phrases", and * wildcards. Stored as a saved query.</div>
+       </div>`
+    : `<div class="form-row">
+        <label class="lab">Prompt<span class="req">*</span></label>
+        <textarea class="textarea" id="cfPrompt" rows="3" placeholder='${isInfRisk(k)
+            ? "e.g. Influencer has shared content containing hate speech, slurs, or discriminatory views toward protected groups."
+            : "e.g. Posts that accuse the brand of making unsubstantiated or deceptive marketing claims, including allegations of false advertising."}'>${esc(createState.prompt)}</textarea>
+        <div class="help">Plain English. The LLM uses this as the test for whether ${isInfRisk(k)?'an influencer profile/activity':'a post'} matches this category.</div>
+       </div>`;
+
+  /* severity (risk only) */
+  const sevField = isBool ? '' : `<div class="form-row">
+      <label class="lab">Severity<span class="req">*</span></label>
+      <div class="sevsel">${SEVERITIES.map(s=>{
+        const cls = s==='Critical'?'crit':s==='High'?'high':s==='Medium'?'med':'low';
+        const active = createState.severity===s;
+        return `<span class="sopt ${cls} ${active?'active':''}" data-sev="${s}">${s}</span>`;
+      }).join('')}</div>
+    </div>`;
+
+  /* folder picker (inc. create-new-folder) */
+  const folderField = `<div class="form-row">
+      <label class="lab">Folder</label>
+      <div class="fsel">
+        ${FOLDERS.map(f=>`<span class="fopt ${createState.folder===f.id?'on':''}" data-folder="${f.id}">
+          <span class="fd" style="background:${f.color}"></span>${f.name}</span>`).join('')}
+        <span class="fopt new" data-folder="__new">+ Create new folder</span>
+      </div>
+      ${createState.newFolder.open ? `<div class="newfolder">
+        <input id="cfNewFolder" placeholder="Folder name" value="${esc(createState.newFolder.name)}"/>
+        <span class="swatches">${FOLDER_COLORS.map(c=>`<span class="sw ${createState.newFolder.color===c?'sel':''}" style="background:${c}" data-col="${c}"></span>`).join('')}</span>
+        <button class="btn primary" id="cfNewFolderOk">Add folder</button>
+        <button class="btn" id="cfNewFolderCancel">Cancel</button>
+      </div>` : ''}
+      <div class="help">Folders are shared across all three kinds — group by use case (e.g. Risk Management, Brand Marketing).</div>
+    </div>`;
+
+  /* labels */
+  const sugg = suggestedLabels();
+  const labelsField = `<div class="form-row">
+      <label class="lab">Labels</label>
+      <div class="labinput" id="labWrap">
+        ${createState.labels.map(l=>`<span class="labchip">#${esc(l)}<span class="x" data-lrm="${esc(l)}">×</span></span>`).join('')}
+        <input id="labInput" placeholder="${createState.labels.length?'Add another…':'Type a label and press Enter…'}" />
+      </div>
+      ${sugg.length?`<div class="labsugg"><span class="sg-h">Existing:</span>${sugg.map(l=>`<span class="sg" data-ladd="${esc(l)}">#${esc(l)}</span>`).join('')}</div>`:''}
+      <div class="help">Cross-cutting tags shared across all kinds — useful for grouping by theme (crisis, legal, exec, q2-launch…). Press Enter or comma to add a new one.</div>
+    </div>`;
+
+  /* surfaces */
+  const surfField = `<div class="form-row">
+      <label class="lab">Apply to surfaces<span class="req">*</span></label>
+      <div class="sufgrid">
+        ${k.surfaces.map(skey=>{
+          const s=surfaceDef(skey); const on=createState.surfaces.has(skey);
+          return `<div class="sufcard ${on?'on':''}" data-sur="${skey}">
+            <span class="sd ${s.cls} on">${skey}</span>
+            <div class="sf-meta"><b>${s.name}</b><span>${on?'Enabled':'Disabled'}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="help">Where this ${isBool?'tag':'category'} appears. You can enable later from the picker.</div>
+    </div>`;
+
+  $('#createBody').innerHTML = `
+    <div class="form-row">
+      <label class="lab">Name<span class="req">*</span></label>
+      <input class="input" id="cfName" placeholder="e.g. ${isBool?'Silicon shield':(isInfRisk(k)?'Active controversy / scandal':'Product safety concerns')}" value="${esc(createState.name)}"/>
+    </div>
+    ${defField}
+    ${sevField}
+    ${folderField}
+    ${labelsField}
+    ${surfField}
+  `;
+  $('#createErr').textContent = createState.err || '';
+
+  /* text input bindings (no re-render to preserve focus) */
+  const nameEl = $('#cfName'); if(nameEl) nameEl.oninput = e=>{createState.name=e.target.value;};
+  const qEl    = $('#cfQuery'); if(qEl)    qEl.oninput    = e=>{createState.query=e.target.value;};
+  const pEl    = $('#cfPrompt');if(pEl)    pEl.oninput    = e=>{createState.prompt=e.target.value;};
+
+  /* structural bindings */
+  $('#createBody').querySelectorAll('[data-sev]').forEach(b=>b.onclick=()=>{createState.severity=b.dataset.sev; renderCreate();});
+  $('#createBody').querySelectorAll('[data-folder]').forEach(b=>b.onclick=()=>{
+    const fid=b.dataset.folder;
+    if(fid==='__new'){ createState.newFolder.open=true; renderCreate(); setTimeout(()=>$('#cfNewFolder')?.focus(),0); return; }
+    createState.folder=fid; renderCreate();
+  });
+  const nfInput=$('#cfNewFolder'); if(nfInput) nfInput.oninput = e=>{createState.newFolder.name=e.target.value;};
+  $('#createBody').querySelectorAll('.sw').forEach(s=>s.onclick=()=>{createState.newFolder.color=s.dataset.col; renderCreate();});
+  const nfOk=$('#cfNewFolderOk'); if(nfOk) nfOk.onclick=()=>{
+    const nm = ($('#cfNewFolder')?.value || createState.newFolder.name).trim();
+    if(!nm){ createState.err='Folder name required'; renderCreate(); return; }
+    const id='f'+Date.now();
+    FOLDERS.splice(FOLDERS.length-1, 0, {id, name:nm, color:createState.newFolder.color});
+    createState.folder=id;
+    createState.newFolder={open:false, name:'', color:createState.newFolder.color};
+    createState.err='';
+    renderCreate();
+  };
+  const nfCx=$('#cfNewFolderCancel'); if(nfCx) nfCx.onclick=()=>{createState.newFolder.open=false; renderCreate();};
+
+  $('#createBody').querySelectorAll('[data-sur]').forEach(c=>c.onclick=()=>{
+    const v=c.dataset.sur;
+    createState.surfaces.has(v) ? createState.surfaces.delete(v) : createState.surfaces.add(v);
+    renderCreate();
+  });
+
+  $('#createBody').querySelectorAll('[data-lrm]').forEach(x=>x.onclick=()=>{
+    createState.labels = createState.labels.filter(l=>l!==x.dataset.lrm);
+    renderCreate(true);
+  });
+  $('#createBody').querySelectorAll('[data-ladd]').forEach(s=>s.onclick=()=>{
+    const v=s.dataset.ladd;
+    if(!createState.labels.includes(v)) createState.labels.push(v);
+    renderCreate(true);
+  });
+  const labEl=$('#labInput');
+  if(labEl){
+    labEl.onkeydown = e=>{
+      if(e.key==='Enter' || e.key===','){
+        e.preventDefault();
+        const v = labEl.value.trim().replace(/^#/,'').toLowerCase().replace(/\s+/g,'-');
+        if(v && !createState.labels.includes(v)){
+          createState.labels.push(v);
+          renderCreate(true);
+        } else { labEl.value=''; }
+      } else if(e.key==='Backspace' && labEl.value==='' && createState.labels.length){
+        createState.labels.pop();
+        renderCreate(true);
+      }
+    };
+    const wrap=$('#labWrap'); if(wrap) wrap.onclick = e=>{ if(e.target.id==='labWrap') labEl.focus(); };
+    if(focusLab) setTimeout(()=>$('#labInput')?.focus(),0);
+  }
+}
+
+function submitCreate(){
+  const k = kindDef(createState.kind);
+  const isBool = k.key==='boolean';
+  if(!createState.name.trim()){ createState.err='Name is required'; renderCreate(); return; }
+  if(isBool && !createState.query.trim()){ createState.err='Boolean query is required'; renderCreate(); return; }
+  if(!isBool && !createState.prompt.trim()){ createState.err='Prompt is required'; renderCreate(); return; }
+  if(createState.surfaces.size===0){ createState.err='Select at least one surface to apply this to'; renderCreate(); return; }
+
+  const newId = (TAGS.length ? Math.max(...TAGS.map(t=>t.id)) : 0) + 1;
+  const today = new Date().toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'});
+  const tag = {
+    id:newId, kind:k.key, name:createState.name.trim(),
+    folder:createState.folder, labels:[...createState.labels],
+    surf:[...createState.surfaces], date:today,
+  };
+  if(isBool) tag.query = createState.query.trim();
+  else { tag.prompt = createState.prompt.trim(); tag.severity = createState.severity; }
+  TAGS.unshift(tag);
+  closeCreate();
+  render();
+}
+
 /* ============================== WIRE UP ============================== */
 $('#viewSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   state.view=b.dataset.view;
@@ -803,12 +1091,11 @@ $('#modalX').onclick=closeModal;
 $('#overlay').onclick=e=>{if(e.target===$('#overlay'))closeModal();};
 $('#modalApply').onclick=()=>{closeModal();};
 $('#newFolderBtn').onclick=()=>alert('Prototype: opens "Create folder" dialog — name, color, and which kinds it should default to.');
-$('#newTagBtn').onclick=()=>{
-  const k = kindDef(state.kind);
-  if(k.key==='boolean') alert('Prototype: opens "New smart tag" — name, boolean query builder, folder, labels, surfaces (Brands / Topics / Alerts).');
-  else if(k.key==='brand-risk') alert('Prototype: opens "New Brand & Topic risk category" — name, natural-language prompt, severity, folder, labels, surfaces (Brands / Topics).');
-  else alert('Prototype: opens "New Influencer risk category" — name, natural-language prompt, severity, folder, labels, surfaces (Vetting / Monitoring).');
-};
+$('#newTagBtn').onclick=openCreate;
+$('#createX').onclick=closeCreate;
+$('#createCancel').onclick=closeCreate;
+$('#createSubmit').onclick=submitCreate;
+$('#createOverlay').onclick=e=>{if(e.target===$('#createOverlay'))closeCreate();};
 
 renderNav();
 render();
