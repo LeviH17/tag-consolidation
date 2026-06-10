@@ -426,15 +426,15 @@
 const KINDS = [
   {key:'boolean',         short:'Regular Tags',              long:'Regular Tags',
    tagline:'Boolean keyword logic — exact terms, operators, wildcards', icon:'⚡', iconBg:'#16131f',
-   surfaces:['S','V','M'], defaultSurfaces:['S'],
+   surfaces:['S','E','V','M'], defaultSurfaces:['S'],
    newLabel:'+ New regular tag',  emptyLabel:'regular tag'},
   {key:'brand-risk',      short:'Search Categories',  long:'Search Categories',
    tagline:'Natural-language prompts applied to brands &amp; topics', icon:'◆', iconBg:'#7c3aed',
-   surfaces:['E','V','M'], defaultSurfaces:['E'],
+   surfaces:['S','E','V','M'], defaultSurfaces:['E'],
    newLabel:'+ New search category', emptyLabel:'search category'},
   {key:'influencer-risk', short:'Influencer Risk Categories',     long:'Influencer Risk Categories',
    tagline:'Natural-language prompts applied to influencers',icon:'◉', iconBg:'#2563eb',
-   surfaces:['V','M'], defaultSurfaces:['V','M'],
+   surfaces:['S','E','V','M'], defaultSurfaces:['V','M'],
    newLabel:'+ New risk category', emptyLabel:'risk category'},
 ];
 const SURFACES = [
@@ -1085,9 +1085,9 @@ function renderCreate(){
     isBR   ? 'New search category' :
              'New risk category';
   $('#createSub').textContent =
-    isBool ? 'Boolean keyword logic — primarily applied to Simple Alerts; can also feed Vetting & Monitoring.' :
-    isBR   ? 'Natural-language prompt evaluated by AI — primarily applied to Enhanced Alerts; can also feed Vetting & Monitoring.' :
-             'Natural-language prompt evaluated by AI — applied to Influencer Vetting and Monitoring.';
+    isBool ? 'Boolean keyword logic — applicable across all four surfaces; defaults to Simple Alerts.' :
+    isBR   ? 'Natural-language prompt evaluated by AI — applicable across all four surfaces; defaults to Enhanced Alerts.' :
+             'Natural-language prompt evaluated by AI — applicable across all four surfaces; defaults to Vetting and Monitoring.';
 
   /* definition field */
   const defField = isBool
